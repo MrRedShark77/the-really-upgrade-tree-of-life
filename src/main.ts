@@ -2,7 +2,7 @@ import './assets/main.css'
 
 import { createApp, reactive } from 'vue'
 import App from './App.vue'
-import { checkPlayer, deepAssign, getSaveData, loadSave } from './utils/saveload'
+import { checkPlayer, deepAssign, getSaveData, loadSave, save } from './utils/saveload'
 import { getStateData } from './utils/state'
 import { getTempData, loop, updateTemp } from './update'
 import { setupUpgrades } from './data/upgrades'
@@ -41,6 +41,10 @@ export function load() {
   setInterval(() => {
     loop();
   }, 1000 / FPS)
+
+  setInterval(() => {
+    save()
+  }, 60000);
 
   console.log(Effect.calculateEffectHTML("leaves"))
   console.log(Effect.calculateEffectHTML("seeds", true))
