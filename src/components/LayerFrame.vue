@@ -36,7 +36,7 @@ const handleScroll = (event: WheelEvent) => horHandleScroll(scrollContainer.valu
           <div v-html="R.description"></div>
         </PrimaryButton>
       </div>
-    </div><div class="layer-upgrades" ref="scrollContainer" @wheel.prevent="handleScroll">
+    </div><div class="layer-upgrades" ref="scrollContainer" @wheel="handleScroll">
       <LayerUpgrade v-for="x in UpgradeGroups[L.upgrade_group]" :class="{[class_L]: true}" :upg_id="x" :key="'U-'+x" />
     </div>
   </div>

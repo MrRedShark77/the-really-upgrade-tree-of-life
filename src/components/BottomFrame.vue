@@ -12,7 +12,7 @@ const handleScroll = (event: WheelEvent) => horHandleScroll(currency_scroll.valu
 
 <template>
   <div style="height: 200px;"></div>
-  <div id="bottom-frame" ref="currency_scroll" @wheel.prevent="handleScroll">
+  <div id="bottom-frame" ref="currency_scroll" @wheel="handleScroll">
     <template v-for="(CS, x) in Currency_Stats" :key="'cs-'+x">
       <div v-if="player.options.show_currencies[x] && CS.condition()" class="currency-frame" :style="{'--color': CS.color}" @mouseover="hovered_stats = x" @mouseout="hovered_stats = ''">
         <div v-html="CS.html"></div>

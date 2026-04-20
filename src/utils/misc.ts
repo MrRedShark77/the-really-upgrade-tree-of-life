@@ -11,5 +11,8 @@ export function replaceSpace(text: string, space: string = '\\', replace: string
 export function softcapped_text(bool: boolean, text = 'softcapped'): string { return bool ? `<span class='soft'>(${text})</span>` : "" }
 
 export function horHandleScroll (element: Element, event: WheelEvent) {
-  if (element) element.scrollLeft += event.deltaY;
+  if (element && element.scrollWidth > element.clientWidth && event.deltaY !== 0) {
+    event.preventDefault();
+    element.scrollLeft += event.deltaY
+  };
 }

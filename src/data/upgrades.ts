@@ -872,7 +872,7 @@ export const Upgrades: Record<string, {
     effect: new Effect({
       type: EffectType.Multiplier,
       static: true,
-      group: 'leaves',
+      group: 'fruits',
       calc: () => 1.5,
     }),
   },
