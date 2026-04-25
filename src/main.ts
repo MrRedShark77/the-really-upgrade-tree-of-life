@@ -11,9 +11,11 @@ import { Composter } from './data/composter'
 import { Cell } from './data/cell'
 import { Bacteria } from './data/bacteria'
 import { setupBigUpgrades } from './data/big_upgrades'
-import { Weathers } from './data/weather'
+import { Seasons, Weathers } from './data/challenges'
 import { setupRepeatableUpgrades } from './data/repeatable_upgrades'
 import { Effect } from './utils/effect'
+import { Incinerator } from './data/incinerator'
+import { Furnace } from './data/furnace'
 
 export const FPS = 30
 
@@ -27,6 +29,9 @@ export function load() {
   setupRepeatableUpgrades()
   setupCurrencies()
   Weathers.setup()
+  Seasons.setup()
+  Incinerator.setup()
+  Furnace.setup()
 
   Composter.setup()
   Cell.setup()
@@ -42,9 +47,7 @@ export function load() {
     loop();
   }, 1000 / FPS)
 
-  setInterval(() => {
-    save()
-  }, 60000);
+  setInterval(save, 60000);
 
   console.log(Effect.calculateEffectHTML("leaves"))
   console.log(Effect.calculateEffectHTML("seeds", true))

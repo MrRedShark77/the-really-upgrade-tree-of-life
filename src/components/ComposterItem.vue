@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Composter } from '@/data/composter';
 import { player, temp } from '@/main';
-import { format, formatPercent, formatTime } from '@/utils/formats';
+import { format, formatPercent, formatPlus, formatTime } from '@/utils/formats';
 import PrimaryButton from './PrimaryButton.vue';
 import { computed } from 'vue';
 import { Currencies, Currency } from '@/data/currencies';
@@ -26,6 +26,10 @@ function scale_text() {
     <h3>{{ F.name }}</h3>
     <div>
       You have made <b>{{ format(P.fertilizers, 0) }} <span v-if="Decimal.gt(free, 0)">+ {{ format(free) }}</span></b> {{ scale_text() }} fertilizers using this composter.
+      <template v-if="n === 3">
+        <hr class="sub-line" />
+        These fertilizers increase the fertilizer's base by <b>{{ formatPlus(Composter.entropyBoost,3) }}</b>.
+      </template>
     </div>
     <PrimaryButton class="compost-button" :enabled="!P.active && Decimal.gte(C.amount, cost)" @click="Composter.compost(n)">
       <template v-if="P.active">

@@ -111,7 +111,7 @@ export function advanced_softcap (num: DecimalSource, s: DecimalSource, p: Decim
 
 export const softcap = (num: DecimalSource, s: DecimalSource, p: DecimalSource, mode: SoftcapMode, ...args: DecimalSource[]) => advanced_softcap(num,s,p,1,mode,...args);
 
-type CostMode = "EA" | "EAI" | "E" | "EI" | "ES" | "ESI"
+type CostMode = "EA" | "EAI" | "E" | "EI" | "ES" | "ESI" | "P" | "PI"
 
 export function simpleCost (num: DecimalSource, type: CostMode, ...args: DecimalSource[]): Decimal {
   const x = new Decimal(num);
@@ -126,6 +126,7 @@ export function simpleCost (num: DecimalSource, type: CostMode, ...args: Decimal
       const ln = Decimal.ln(exponent)
       return ln.mul(x).mul(Decimal.root(exponent,increment)).div(base).div(increment).lambertw().mul(increment).sub(ln).div(ln).div(increment)
     }
+
     case "E": { // a * b^x, b > 1
       const [base,exponent] = args
       return Decimal.pow(exponent,x).mul(base)
@@ -134,15 +135,26 @@ export function simpleCost (num: DecimalSource, type: CostMode, ...args: Decimal
       const [base,exponent] = args
       return x.div(base).log(exponent)
     }
+
     case "ES": { // a * b^x * c^x^2, b > 1, c > 1
       const [base,exponent,exponent_square] = args
-        return Decimal.pow(exponent,x).mul(Decimal.sqr(x).pow_base(exponent_square)).mul(base)
+      return Decimal.pow(exponent,x).mul(Decimal.sqr(x).pow_base(exponent_square)).mul(base)
     }
-    case "ESI": { // a * b^x * c^x^2, b > 1, c > 1
+    case "ESI": {
       const [base,exponent,exponent_square] = args
       const ln = Decimal.ln(exponent), ln2 = Decimal.ln(exponent_square)
       return Decimal.div(x,base).ln().mul(ln2).mul(4).add(ln.sqr()).sqrt().sub(ln).div(ln2).div(2)
     }
+
+    case "P": { // a + 2 * a + ... = a * (x + x^2) / 2
+      const [base] = args
+      return x.sqr().add(x).div(2).mul(base)
+    }
+    case "PI": {
+      const [base] = args
+      return solveQuadraticPositive(1,1,x.div(base).mul(-2))
+    }
+
     default: {
       return DC.D0
     }

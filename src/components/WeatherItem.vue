@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Weathers } from '@/data/weather';
+import { Weathers } from '@/data/challenges';
 import PrimaryButton from './PrimaryButton.vue';
 import { player, temp } from '@/main';
 import { format } from '@/utils/formats';
@@ -18,8 +18,8 @@ const style = computed(() => {
 </script>
 
 <template>
-  <PrimaryButton v-if="n === 0 || Decimal.gte(player.weather.best[n-1][0], Weathers.ctn[n-1].goal[0])" @click="Weathers.enter(n)" :style>
-    <h4>{{ W.name }}</h4>
+  <PrimaryButton v-if="n === 0 || player.first.weather[n-1]" @click="Weathers.enter(n)" :style>
+    <h4>{{ W.name }}<sup v-if="Decimal.gt(player.weather.best[n][1], 1)">{{ format(player.weather.best[n][1],0) }}</sup></h4>
     <hr class="sub-line" />
     <div v-html="W.nerf[1](W.nerf[0](player.weather.best[n][1]))"></div>
     <hr class="sub-line" />

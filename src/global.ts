@@ -2,7 +2,7 @@ import type { DecimalSource } from "break_eternity.js";
 import { player, temp } from "./main";
 import { copySave, deepAssign, save, type Save } from "./utils/saveload";
 import Decimal from "break_eternity.js";
-import { D, scaleAll, expPow, sumBase, simpleCost, advanced_scale, advanced_softcap } from "./utils/decimal";
+import { D, scaleAll, expPow, sumBase, simpleCost, advanced_scale, advanced_softcap, solveQuadraticPositive } from "./utils/decimal";
 import { calc } from "./update";
 import { Effects, TotalEffectGroups } from "./utils/effect";
 
@@ -24,7 +24,7 @@ if (import.meta.env.DEV) {
   window.Decimal = Decimal;
 
   window.formulas = {
-    advanced_softcap, advanced_scale, scaleAll, expPow, sumBase, simpleCost
+    advanced_softcap, advanced_scale, scaleAll, expPow, sumBase, simpleCost, solveQuadraticPositive
   }
 
   window.dev = {

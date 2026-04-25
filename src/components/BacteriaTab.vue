@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { player } from '@/main';
+import { player, temp } from '@/main';
 import { format, formatMult, formatPlus } from '@/utils/formats';
 import PrimaryButton from './PrimaryButton.vue';
 import { Resets } from '@/data/resets';
@@ -11,7 +11,7 @@ import Decimal from 'break_eternity.js';
 
 <template>
   <p>
-    You have <span class="big-text">{{ format(player.bacteria.amount, 0) }} / {{ format(Bacteria.limit, 0) }}</span> ({{ formatMult(Decimal.pow(2, Bacteria.speed), 3) }}/s) Bacteria, translated to:
+    You have <span class="big-text">{{ format(player.bacteria.amount, 0) }} / {{ format(temp.bacteria_limit, 0) }}</span> ({{ formatMult(Decimal.pow(2, Bacteria.speed), 3) }}/s) Bacteria, translated to:
   </p>
   <p>
     <span class="big-text">{{ formatPlus(Bacteria.effect(0),3) }}</span> fertilizer's base,

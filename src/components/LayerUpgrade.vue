@@ -8,7 +8,7 @@ import Decimal from 'break_eternity.js';
 import { replaceSpace } from '@/utils/misc';
 import { player } from '@/main';
 
-const { upg_id } = defineProps<{ upg_id: string }>()
+const { upg_id, layer } = defineProps<{ upg_id: string, layer: string }>()
 
 const U = Upgrades[upg_id]
 
@@ -19,9 +19,16 @@ const cost = computed(() => U.cost[1]), C = Currencies[U.cost[0] as Currency]
 const visible = computed(() => {
   const o = player.options.hide_upgrades
 
-  if (o >= 1 && player.upgrades[upg_id]) return false;
+  if (player.upgrades[upg_id]) {
+    if (o == 1 || o == 2) return false;
+    if (o == 3) {
+      const o2 = player.options.advanced_upgrades[layer]
 
-  if (o >= 2 && U.branch.length > 0 && U.branch.every(x => !player.upgrades[x])) return false;
+      if (!(E ? o2[E.type] : o2[0])) return false;
+    }
+  }
+
+  if (o == 2 && U.branch.length > 0 && U.branch.every(x => !player.upgrades[x])) return false;
 
   return player.discovered_upgrades[upg_id] || U.condition!() && (U.branch.length === 0 || U.branch.every(x => player.discovered_upgrades[x]))
 })

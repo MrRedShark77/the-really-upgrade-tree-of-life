@@ -10,6 +10,7 @@ import ChallengesTab from "@/components/ChallengesTab.vue";
 import TheStatueTab from "@/components/TheStatueTab.vue";
 import Decimal from "break_eternity.js";
 import OptionsTab from "@/components/OptionsTab.vue";
+import BaseTreeTab from "@/components/tree/BaseTreeTab.vue";
 
 export const TABS: {
   name: string;
@@ -64,6 +65,14 @@ export const TABS: {
 
     stabs: [
       [TheStatueTab],
+    ],
+  },{ // 6
+    name: "The Tree",
+
+    condition: () => hasUpgrade('RO\\15'),
+
+    stabs: [
+      [BaseTreeTab],
     ],
   },
 ]

@@ -41,7 +41,11 @@ export const Cell = {
     amount = scale(amount, ...S[0], "ME2", true);
     amount = scale(amount, ...S[1], "L", true);
 
-    return amount.pow10().min(this.cap)
+    amount = amount.pow10()
+
+    if (!hasUpgrade("RO\\M8")) amount = amount.min(this.cap);
+
+    return amount
   },
 
   setup() {
@@ -50,7 +54,7 @@ export const Cell = {
       id: "cell-L",
       static: false,
       active: () => hasUpgrade("E\\1"),
-      calc: () => Decimal.add(player.cell.amount, 1).log2().pow(2).mul(Effect.effect("upg-E\\11")).root(player.weather.active > -1 ? 2 : 1),
+      calc: () => Decimal.add(player.cell.amount, 1).log2().pow(2).mul(Effect.effect("upg-E\\11")).root(player.weather.active > -1 && player.season.active > -1 ? 2 : 1),
       group: "leaves",
     })
     new Effect({
@@ -58,7 +62,7 @@ export const Cell = {
       id: "cell-S",
       static: false,
       active: () => hasUpgrade("E\\1"),
-      calc: () => Decimal.add(player.cell.amount, 1).log2().mul(Decimal.root(Effect.effect("upg-E\\11"), 2)).root(player.weather.active > -1 ? 2 : 1),
+      calc: () => Decimal.add(player.cell.amount, 1).log2().mul(Decimal.root(Effect.effect("upg-E\\11"), 2)).root(player.weather.active > -1 && player.season.active > -1 ? 2 : 1),
       group: "seeds",
     })
     new Effect({
@@ -66,13 +70,13 @@ export const Cell = {
       id: "cell-F",
       static: false,
       active: () => hasUpgrade("E\\1"),
-      calc: () => Decimal.add(player.cell.amount, 1).log2().root(2).mul(Decimal.root(Effect.effect("upg-E\\11"), 4)).root(player.weather.active > -1 ? 2 : 1),
+      calc: () => Decimal.add(player.cell.amount, 1).log2().root(2).mul(Decimal.root(Effect.effect("upg-E\\11"), 4)).root(player.weather.active > -1 && player.season.active > -1 ? 2 : 1),
       group: "fruits",
     })
   },
 
   cellular_power: {
-    get requirement() { return Decimal.add(scale(player.auto.total, 100, 2, "L"), 1).pow_base(1e12) },
+    get requirement() { return Decimal.add(scale(scale(player.auto.total, 400, 2, "P"), 100, 2, "L"), 1).pow_base(1e12) },
 
     get amount() {
       let x = D(player.auto.total)

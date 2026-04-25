@@ -21,7 +21,7 @@ export const BigUpgrades: Record<string, {
     unl: () => true,
     get description() { return `Increase replicate chance.` },
     cost: ['entropy', x => simpleCost(x, "E", 1, 1.1).floor(), x => simpleCost(x, "EI", 1, 1.1).floor().add(1)],
-    effect: [1, x => Decimal.add(x, 1), x => formatPercent(Decimal.div(x, 100))],
+    effect: [1, x => Decimal.add(x, 1).pow(hasUpgrade("E\\42") ? Decimal.div(x, 100).add(1) : 1), x => formatPercent(Decimal.div(x, 100))],
     preEffect: new Effect({
       type: EffectType.Multiplier,
       static: false,
@@ -56,7 +56,7 @@ export const BigUpgrades: Record<string, {
     unl: () => true,
     nospend: true,
     get description() { return `Add bonus Fertilizers of all types.` },
-    cost: ['bacteria', x => simpleCost(scale(scale(x, 100, 2, 'P'), 10, 2, 'P'), "E", 1e3, 5).floor(), x => scale(scale(simpleCost(x, "EI", 1e3, 5), 10, 2, "P", true), 100, 2, "P", true).floor().add(1)],
+    cost: ['bacteria', x => simpleCost(scale(scale(x, 50, 2, 'ME2'), 10, 2, 'P'), "E", 1e3, 5).floor(), x => scale(scale(simpleCost(x, "EI", 1e3, 5), 10, 2, "P", true), 50, 2, "ME2", true).floor().add(1)],
     effect: [0, x => x, x => formatPlus(x, 0)],
     preEffect: new Effect({
       type: EffectType.Addition,
@@ -68,7 +68,18 @@ export const BigUpgrades: Record<string, {
     nospend: true,
     get description() { return `Replicate Bacteria faster.` },
     cost: ['bacteria', x => simpleCost(x, "E", 1e4, 10).floor(), x => simpleCost(x, "EI", 1e4, 10).floor().add(1)],
-    effect: [1, x => softcap(Decimal.root(x, 2).pow_base(1.5).mul(Decimal.div(x, 5).add(1)), 100, 1, "LOG"), x => formatMult(x)],
+    effect: [1, x => softcap(Decimal.root(x, 2).pow_base(1.5).mul(Decimal.div(x, 5).add(1)), 1000, 1, "LOG"), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+    })
+  },
+  "bacteria\\3": {
+    unl: () => hasUpgrade("RO\\16"),
+    nospend: true,
+    get description() { return `Replicate Bacteria faster again.` },
+    cost: ['roots', x => simpleCost(x, "E", 1, 1.5).floor(), x => simpleCost(x, "EI", 1, 1.5).floor().add(1)],
+    effect: [1, x => Decimal.add(x, 1), x => formatMult(x)],
     preEffect: new Effect({
       type: EffectType.Multiplier,
       static: false,
@@ -84,6 +95,7 @@ export const BigUpgradeColors: Record<string, string> = {
 }
 
 export function getBigUpgradeEffect(id: string) { return Effect.effect("bupg-"+id) }
+export function resetBigUpgradesByGroup(id: string, keep: string[] = []) { for (const i of BigUpgradeGroups[id]) if (!keep.includes(i)) player.big_upgrades[i] = 0; }
 
 export function purchaseBigUpgrade(id: string, auto: boolean = false) {
   const U = BigUpgrades[id]
@@ -104,6 +116,8 @@ export function purchaseBigUpgrade(id: string, auto: boolean = false) {
 
   // U.onbuy?.()
 }
+
+export function purchaseAllBigUpgrades(group: string) { for (const id of BigUpgradeGroups[group]) purchaseBigUpgrade(id, true); }
 
 export function setupBigUpgrades() {
   for (const id of BigUpgradeKeys) {

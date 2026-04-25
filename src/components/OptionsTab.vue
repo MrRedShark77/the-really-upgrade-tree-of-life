@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Currency_Stats } from '@/data/currencies';
+import { Layers } from '@/data/layers';
 import { player } from '@/main';
+import { EffectNames, EffectType } from '@/utils/effect';
 import { copySave, importy, importy_file, save, saveFile, wipe } from '@/utils/saveload';
 
 </script>
@@ -30,6 +32,7 @@ import { copySave, importy, importy_file, save, saveFile, wipe } from '@/utils/s
             <option value=0 style="color:green">Never</option>
             <option value=1 style="color:green">Upgrades bought (faster)</option>
             <option value=2 style="color:green">Upgrades bought or don't meet purchased upgrades (fastest)</option>
+            <option value=3 style="color:green">Advanced</option>
           </select>
         </button>
       </div><div style="margin: 10px 0;">
@@ -42,10 +45,32 @@ import { copySave, importy, importy_file, save, saveFile, wipe } from '@/utils/s
       <div class="table-center" style="gap: 5px;">
         <template v-for="(CS, x) in Currency_Stats" :key="'css-'+x">
           <div v-if="CS.condition()" class="o-options-currency">
-            {{ CS.name }} <input type="checkbox" size="10" v-model="player.options.show_currencies[x]">
+            {{ CS.name }} <input type="checkbox" v-model="player.options.show_currencies[x]">
           </div>
         </template>
       </div>
+    </div><div class="challenges-subtab">
+      <h3>Advanced Purchased Upgrades Visibility</h3>
+      <hr class="sub-line" />
+      <table align="center" class="o-adv-opt-table">
+        <tbody>
+          <tr>
+            <td></td>
+
+            <td v-for="x in [0,1,2,3,5,6]" :key="'etn-'+x">{{ EffectNames[x as EffectType] }}</td>
+          </tr>
+
+          <template v-for="(x, y) in Layers" :key="'lnv-'+y">
+            <tr v-if="x.unlock()">
+              <td>{{ x.upgrade_name }}</td>
+
+              <td v-for="z in [0,1,2,3,5,6]" :key="'etn-'+y+'-'+z">
+                <input type="checkbox" v-model="player.options.advanced_upgrades[y][z]">
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -84,6 +109,28 @@ import { copySave, importy, importy_file, save, saveFile, wipe } from '@/utils/s
   & > input[type="checkbox"] {
     width: 25px;
     height: 25px;
+  }
+}
+
+.o-adv-opt-table {
+  background: #0002;
+  border-collapse: collapse;
+
+  &, & tr, & td {
+    border: solid 1px black;
+  }
+
+  & td {
+    padding: 5px;
+  }
+
+  & td:nth-child(n+2) {
+    width: 80px;
+  }
+
+  & input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>

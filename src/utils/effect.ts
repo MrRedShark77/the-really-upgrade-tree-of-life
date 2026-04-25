@@ -19,6 +19,16 @@ export enum EffectType {
   Exponent,
 }
 
+export const EffectNames: Record<EffectType, string> = {
+  [EffectType.None]: 'None',
+  [EffectType.Addition]: 'Addition',
+  [EffectType.BaseMultiplier]: 'Static Multiplier',
+  [EffectType.BaseExponent]: 'Static Exponent',
+  [EffectType.Base]: 'Base',
+  [EffectType.Multiplier]: 'Multiplier',
+  [EffectType.Exponent]: 'Exponent',
+}
+
 function operateEffect(id: EffectType, x: DecimalSource, y: DecimalSource): DecimalSource {
   switch (id) {
     case EffectType.Addition: return Decimal.add(x, y);
@@ -90,32 +100,10 @@ export class Effect {
     if (data.calc) this.calc = data.calc;
     if (data.active) this.active = data.active;
 
-    if (data.display) this.display = data.display;
-    else switch (this.type) {
-      case EffectType.Addition:
-        if (!this.static) this.display = x => formatPlus(x)
-      break;
-      case EffectType.Multiplier:
-        this.display = x => formatMult(x)
-      break;
-      case EffectType.Exponent:
-        if (!this.static) this.display = x => formatPow(x, 3);
-      break;
-      case EffectType.BaseExponent:
-        if (typeof data.group === "string" && data.group in TotalEffectGroups) {
-          const g = TotalEffectGroups[data.group as string]
-          const y = (x: DecimalSource) => formatMult(Decimal.pow(g[EffectType.BaseMultiplier], Decimal.sub(x, 1).mul(g[EffectType.BaseExponent]).div(this.active() ? x : 1)))
-          this.display = this.static ? y : (x => formatPow(x, 3) + " (" + y(x) + ")")
-        }
-      break;
-    };
-
-    if (data.id) Effects[this.id = data.id] = this;
-
     if (data.group) {
-      if (typeof data.group === "string") data.group = [data.group];
+      const g = typeof data.group === "string" ? [data.group] : data.group
 
-      for (const group of data.group) {
+      for (const group of g) {
         let G = EffectGroups[group];
 
         if (G == null) {
@@ -143,6 +131,28 @@ export class Effect {
         G[this.type].push(this)
       }
     }
+
+    if (data.display) this.display = data.display;
+    else switch (this.type) {
+      case EffectType.Addition:
+        if (!this.static) this.display = x => formatPlus(x)
+      break;
+      case EffectType.Multiplier:
+        this.display = x => formatMult(x)
+      break;
+      case EffectType.Exponent:
+        if (!this.static) this.display = x => formatPow(x, 3);
+      break;
+      case EffectType.BaseExponent:
+        if (typeof data.group === "string" && data.group in TotalEffectGroups) {
+          const g = TotalEffectGroups[data.group as string]
+          const y = (x: DecimalSource) => formatMult(Decimal.pow(g[EffectType.BaseMultiplier], Decimal.sub(x, 1).mul(g[EffectType.BaseExponent]).div(this.active() ? x : 1)))
+          this.display = this.static ? y : (x => formatPow(x, 3) + " (" + y(x) + ")")
+        }
+      break;
+    };
+
+    if (data.id) Effects[this.id = data.id] = this;
   }
 
   get_effect(calculated=false): DecimalSource { return calculated || this.active() ? this.temp ?? (this.temp = this.calc()) : this.default }

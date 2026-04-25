@@ -223,7 +223,7 @@ button * {
 
 .layer-content {
   display: grid;
-  grid-template-rows: 50px 80px;
+  grid-template-rows: 50px 80px auto;
   gap: 5px;
 }
 
@@ -254,6 +254,9 @@ button * {
 .upgrade-E {
   --button-color: #b1c4eb;
 }
+.upgrade-RO {
+  --button-color: #dddf24;
+}
 
 .bacteria-button {
   --button-color: #9ae8a5;
@@ -271,7 +274,7 @@ button * {
 
 .fertilizer-frame {
   width: 240px;
-  height: 200px;
+  height: 250px;
 
   border: solid 2px #310;
   background: #420;
@@ -306,6 +309,14 @@ button * {
 .no-grid-big-upgrade {
   width: 240px;
   height: 140px;
+
+  font-size: 12px;
+  margin: 0px;
+}
+
+.half-big-upgrade {
+  width: 240px;
+  height: 60px;
 
   font-size: 12px;
   margin: 0px;

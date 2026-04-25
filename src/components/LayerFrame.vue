@@ -7,7 +7,7 @@ import LayerUpgrade from './LayerUpgrade.vue';
 import { UpgradeGroups } from '@/data/upgrades';
 import { player, temp } from '@/main';
 import PrimaryButton from './PrimaryButton.vue';
-import { Resets } from '@/data/resets';
+import { Resets, respecRootUpgrades } from '@/data/resets';
 import { ref } from 'vue';
 import { horHandleScroll } from '@/utils/misc';
 
@@ -30,14 +30,20 @@ const handleScroll = (event: WheelEvent) => horHandleScroll(scrollContainer.valu
           You have <b>{{ format(C.amount,0) }}</b> <span v-if="Decimal.gt(temp.currencies[L.currency], 0) && Decimal.neq(C.passive, 0)">{{ formatGain(C.amount, Decimal.mul(temp.currencies[L.currency], C.passive)) }}</span> {{ C.name }}.
         </div><div v-if="layer_id === 'entropy'">
           You have <b>{{ format(player.PE,0) }}</b> Potential Energy.
+        </div><div v-if="layer_id === 'root'">
+          You have <b>{{ format(player.root.total,0) }}</b> total Roots.
         </div>
-      </div><div>
+      </div>
+      <div>
         <PrimaryButton v-if="L.reset" class="layer-reset-button" :class="{[class_L]: true}" :enabled="R.reached" @click="R.perform()">
           <div v-html="R.description"></div>
         </PrimaryButton>
       </div>
+      <PrimaryButton v-if="layer_id === 'root'" class="upgrade-RO" style="height: 30px;" @click="respecRootUpgrades()">
+        Respec Root Upgrades
+      </PrimaryButton>
     </div><div class="layer-upgrades" ref="scrollContainer" @wheel="handleScroll">
-      <LayerUpgrade v-for="x in UpgradeGroups[L.upgrade_group]" :class="{[class_L]: true}" :upg_id="x" :key="'U-'+x" />
+      <LayerUpgrade v-for="x in UpgradeGroups[L.upgrade_group]" :class="{[class_L]: true}" :upg_id="x" :layer="layer_id" :key="'U-'+x" />
     </div>
   </div>
 </template>

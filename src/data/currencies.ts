@@ -2,13 +2,13 @@ import { FPS, player, temp } from "@/main";
 import type { DecimalSource } from "break_eternity.js";
 import Decimal from "break_eternity.js";
 import { hasUpgrade } from "./upgrades";
-import { Effect, EffectType, TotalEffectGroups } from "@/utils/effect";
+import { Effect, Effects, EffectType, TotalEffectGroups } from "@/utils/effect";
 import { Resets } from "./resets";
-import { softcap } from "@/utils/decimal";
-import { Weathers } from "./weather";
+import { advanced_softcap, softcap } from "@/utils/decimal";
 import { format, formatGain, formatMult, formatTime } from "@/utils/formats";
 import { softcapped_text } from "@/utils/misc";
 import { Cell } from "./cell";
+import { Seasons } from "./challenges";
 
 export enum Currency {
   Leaves = 'leaves',
@@ -18,6 +18,10 @@ export enum Currency {
   PotentialEnergy = "potential-energy",
   Entropy = "entropy",
   Bacteria = "bacteria",
+  Roots = "roots",
+  TotalRoots = "total-roots",
+  Heat = "heat",
+  Ash = "ash",
 }
 
 export const Currencies: Record<Currency, {
@@ -47,7 +51,11 @@ export const Currencies: Record<Currency, {
     get gain() {
       if (!hasUpgrade("L\\0")) return 0;
 
-      return Effect.calculateEffects("age", 1)
+      let x = Effect.calculateEffects("age", 1)
+
+      x = advanced_softcap(x, '4.351968e367', .5, hasUpgrade("E\\52") ? .9 : 1, "E")
+
+      return x
     },
 
     passive: 1,
@@ -62,10 +70,10 @@ export const Currencies: Record<Currency, {
 
       const x = Effect.calculateEffects("seeds", 1)
 
-      return Decimal.max(x, 1).floor()
+      return Decimal.max(x, 0).floor()
     },
 
-    get passive() { return +Weathers.is_completed(1) },
+    get passive() { return +player.first.weather[1] },
   },
   fruits: {
     name: "Fruits",
@@ -75,12 +83,14 @@ export const Currencies: Record<Currency, {
     get gain() {
       if (!Resets.fruits.reached) return 0;
 
+      if (Seasons.in(0)) return 1;
+
       const x = Effect.calculateEffects("fruits", 1)
 
-      return Decimal.max(x, 1).floor()
+      return Decimal.max(x, 0).floor()
     },
 
-    passive: 0,
+    get passive() { return +player.first.season[0] },
   },
   'potential-energy': {
     name: "Potential Energy",
@@ -112,15 +122,123 @@ export const Currencies: Record<Currency, {
     set amount(v) { player.bacteria.amount = Decimal.max(v, 0) },
 
     get gain() {
-      if (Decimal.lt(player.bacteria.types, 1)) return 0;
+      if (Decimal.lt(player.bacteria.types, 1) || !Resets.bacteria.reached) return 0;
 
       const x = Effect.calculateEffects("bacteria", 1)
 
       return Decimal.max(x, 1).floor()
     },
 
+    get passive() { return +hasUpgrade("RO\\M7") },
+  },
+  'roots': {
+    name: "Roots",
+    get amount() { return player.root.amount },
+    set amount(v) { player.root.amount = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!Resets.root.reached) return 0;
+
+      const x = Effect.calculateEffects("roots", 1)
+
+      return Decimal.max(x, 1).floor()
+    },
+
     passive: 0,
   },
+  'total-roots': {
+    name: "total Roots",
+    get amount() { return player.root.total },
+    set amount(v) { player.root.total = Decimal.max(v, 0) },
+
+    gain: 0,
+    passive: 0,
+  },
+  'heat': {
+    name: "Heat",
+    get amount() { return player.furnace.heat },
+    set amount(v) { player.furnace.heat = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!hasUpgrade("RO\\35")) return 0;
+
+      const x = Effect.calculateEffects("heat", 1)
+
+      return Decimal.max(x, 0)
+    },
+
+    passive: 1,
+  },
+  'ash': {
+    name: "Ash",
+    get amount() { return player.furnace.ash },
+    set amount(v) { player.furnace.ash = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!hasUpgrade("RO\\35")) return 0;
+
+      const x = Effect.calculateEffects("ash", 1)
+
+      return Decimal.max(x, 1).floor()
+    },
+
+    passive: 1,
+  },
+}
+
+export function setupCurrencies() {
+  new Effect({
+    id: "seeds",
+    group: "seeds",
+    static: false,
+    type: EffectType.Base,
+    calc: () => Decimal.div(player.leaves, 1e7).cbrt()
+  })
+  new Effect({
+    id: "fruits",
+    group: "fruits",
+    static: false,
+    type: EffectType.Base,
+    calc: () => Decimal.div(player.seeds, 2.5e7).root(4)
+  })
+  new Effect({
+    id: "entropy",
+    group: "entropy",
+    static: false,
+    type: EffectType.Base,
+    calc: () => softcap(Decimal.div(player.PE, 2e22).root(20), 100, 0.75, "E")
+  })
+  new Effect({
+    id: "bacteria",
+    group: "bacteria",
+    static: false,
+    type: EffectType.Base,
+    calc: () => softcap(Decimal.max(player.cell.amount, 1).pow(Decimal.add(player.entropy, 1).log10().div(200)).div(5e7), 1e9, 0.5, "E")
+  })
+  new Effect({
+    id: "roots",
+    group: "roots",
+    static: false,
+    type: EffectType.Base,
+    variables: {
+      get exp() { return Decimal.add(3, Effect.effect("upg-RO\\13")).add(Effect.effect("upg-E\\50")) },
+    },
+    calc() { return Decimal.max(player.leaves, 1).log10().div(1500).pow(this.variables.exp) },
+  })
+  new Effect({
+    id: "heat",
+    group: "heat",
+    static: false,
+    type: EffectType.Base,
+    calc: () => Decimal.mul(player.incinerator[0][1], player.incinerator[1][1]).pow(2).mul(Decimal.div(player.incinerator[2][1], 10).pow(2).max(1)).div(1e3)
+  })
+  new Effect({
+    id: "ash",
+    group: "ash",
+    static: false,
+    type: EffectType.Base,
+    calc: () => player.furnace.heat
+  })
 }
 
 export const Currency_Stats: Record<string, {
@@ -154,7 +272,7 @@ export const Currency_Stats: Record<string, {
     },
     hover: () => `<h3>Tree aging speed</h3>
     <hr class='sub-line white-line' />
-    ${Effect.calculateEffectHTML("age")} = <b>${format(temp.currencies.age)}</b>`,
+    ${Effect.calculateEffectHTML("age")} = <b>${format(temp.currencies.age)}</b> ${softcapped_text(Decimal.gte(temp.currencies.age, '4.351968e367'))}`,
   },
   "seeds": {
     default: true,
@@ -234,35 +352,17 @@ export const Currency_Stats: Record<string, {
     <hr class='sub-line white-line' />
     ${Effect.calculateEffectHTML("bacteria",true,`<b>Cells</b><sup>0.005 × log<sub>10</sub>(<b>Entropy</b>+1)</sup> / ${format(5e7)}`, softcapped_text(Decimal.gte(TotalEffectGroups.bacteria[EffectType.Base], 1e9)))} = <b>${format(temp.currencies.bacteria)}</b>`,
   },
-}
-
-export function setupCurrencies() {
-  new Effect({
-    id: "seeds",
-    group: "seeds",
-    static: false,
-    type: EffectType.Base,
-    calc: () => Decimal.div(player.leaves, 1e7).cbrt()
-  })
-  new Effect({
-    id: "fruits",
-    group: "fruits",
-    static: false,
-    type: EffectType.Base,
-    calc: () => Decimal.div(player.seeds, 2.5e7).root(4)
-  })
-  new Effect({
-    id: "entropy",
-    group: "entropy",
-    static: false,
-    type: EffectType.Base,
-    calc: () => softcap(Decimal.div(player.PE, 2e22).root(20), 100, 0.75, "E")
-  })
-  new Effect({
-    id: "bacteria",
-    group: "bacteria",
-    static: false,
-    type: EffectType.Base,
-    calc: () => softcap(Decimal.max(player.cell.amount, 1).pow(Decimal.add(player.entropy, 1).log10().div(200)).div(5e7), 1e9, 0.5, "E")
-  })
+  "roots": {
+    default: true,
+    name: "Roots",
+    condition: () => player.first.root,
+    color: '#dddf24',
+    get html() {
+      const C = Currencies.roots
+      return `<b>Roots</b>: ${format(C.amount,0)}<br>${Decimal.neq(C.passive, 0) ? formatGain(C.amount, temp.currencies.roots) : `(+${format(temp.currencies.roots, 0)})`}`
+    },
+    hover: () => `<h3>Roots</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("roots",true,`(log<sub>10</sub><b>Leaves</b> / ${format(1500)})<sup>${format(Effects['roots'].variables.exp,3)}</sup>`)} = <b>${format(temp.currencies.roots)}</b>`,
+  },
 }

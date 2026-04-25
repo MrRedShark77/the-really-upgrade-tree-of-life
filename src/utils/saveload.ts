@@ -4,13 +4,15 @@ import { Currency_Stats } from "@/data/currencies";
 import { RepeatableUpgradeKeys } from "@/data/repeatable_upgrades";
 import { checkTab } from "@/data/tabs";
 import { UpgradeKeys } from "@/data/upgrades";
+import { Weathers } from "@/data/challenges";
 import { player } from "@/main";
 import { resetTemp, updateTemp } from "@/update";
 import type { DecimalSource } from "break_eternity.js"
 import { toRaw } from "vue";
+import { Layers } from "@/data/layers";
 
 const LOCALSTORAGE_NAME = "TUTOL-save";
-const VERSION = 0;
+const VERSION = 1;
 
 export type Save = {
   leaves: DecimalSource;
@@ -47,10 +49,32 @@ export type Save = {
     best: [DecimalSource, DecimalSource][];
   },
 
+  season: {
+    active: number;
+    best: [DecimalSource, DecimalSource][];
+  },
+
+  root: {
+    amount: DecimalSource;
+    total: DecimalSource;
+  },
+
+  incinerator: [DecimalSource, DecimalSource][],
+
+  furnace: {
+    charcoal: DecimalSource;
+    heat: DecimalSource;
+    ash: DecimalSource;
+    coal: DecimalSource;
+  },
+
   first: {
     seed: boolean;
     fruit: boolean;
     entropy: boolean;
+    weather: boolean[];
+    root: boolean;
+    season: boolean[];
   },
 
   timePlayed: number;
@@ -67,6 +91,7 @@ export type Save = {
     notation: number;
     hide_upgrades: number;
     show_currencies: Record<string, boolean>
+    advanced_upgrades: Record<string, boolean[]>
   };
 
   tab: number;
@@ -90,6 +115,9 @@ export function getSaveData(): Save {
       seed: false,
       fruit: false,
       entropy: false,
+      weather: [false,false,false,false],
+      root: false,
+      season: [false,false,false,false],
     },
 
     cell: {
@@ -113,6 +141,25 @@ export function getSaveData(): Save {
       best: [],
     },
 
+    season: {
+      active: -1,
+      best: [],
+    },
+
+    root: {
+      amount: 0,
+      total: 0,
+    },
+
+    incinerator: [],
+
+    furnace: {
+      charcoal: 0,
+      heat: 0,
+      ash: 0,
+      coal: 0,
+    },
+
     timePlayed: 0,
     lastPlayed: Date.now(),
 
@@ -127,6 +174,7 @@ export function getSaveData(): Save {
       notation: 2,
       hide_upgrades: 0,
       show_currencies: {},
+      advanced_upgrades: {},
     },
 
     tab: 0,
@@ -142,7 +190,7 @@ export function getSaveData(): Save {
   for (const id of BigUpgradeKeys) s.big_upgrades[id] = 0;
   for (const id of RepeatableUpgradeKeys) s.repeatable_upgrades[id] = [0, 0];
 
-  for (let x = 0; x < 3; x++) s.composter[x] = {
+  for (let x = 0; x < 4; x++) s.composter[x] = {
     active: false,
     time: 0,
     fertilizers: 0,
@@ -151,8 +199,16 @@ export function getSaveData(): Save {
   for (const id of AutoKeys) s.auto.enabled[id] = false;
 
   for (let i = 0; i < 4; i++) s.weather.best[i] = [0,1];
+  for (let i = 0; i < 4; i++) s.season.best[i] = [0,1];
+  for (let i = 0; i < 3; i++) s.incinerator[i] = [0,0];
 
   for (const [id, v] of Object.entries(Currency_Stats)) s.options.show_currencies[id] = v.default ?? false;
+
+  for (const id in Layers) {
+    const x = []
+    for (const i of [0,1,2,3,5,6]) x[i] = true;
+    s.options.advanced_upgrades[id] = x;
+  };
 
   return s
 }
@@ -209,7 +265,7 @@ export function saveFile() {
   window.URL = window.URL || window.webkitURL;
   const a = document.createElement("a")
   a.href = window.URL.createObjectURL(file)
-  a.download = "The Uninfinity - "+new Date().toString()+".txt"
+  a.download = "The RUTOL - "+new Date().toString()+".txt"
   a.click()
 }
 
@@ -271,6 +327,10 @@ export function wipe() {
 export function checkPlayer() {
   // const date = Date.now()
   // const offline_time = (date - player.lastPlayed) / 1e3;
+
+  if (player._VERSION < 1) {
+    for (let i = 0; i < 4; i++) player.first.weather[i] ||= Weathers.is_completed(i);
+  }
 
   player._VERSION = VERSION
 }

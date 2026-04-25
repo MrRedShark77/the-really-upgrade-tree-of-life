@@ -1,6 +1,6 @@
 import { player, temp } from "@/main"
 import { Effect, EffectType } from "@/utils/effect"
-import { formatMult, formatPercent, formatPow } from "@/utils/formats"
+import { format, formatMult, formatPercent, formatPow } from "@/utils/formats"
 import { splitIntoGroups } from "@/utils/misc"
 import type { DecimalSource } from "break_eternity.js"
 import Decimal from "break_eternity.js"
@@ -24,6 +24,105 @@ export const Upgrades: Record<string, {
   [index: string]: unknown
 }> = {
   //#region Leaf
+  "L\\-12": {
+    get description() { return `Tree age boosts Seeds.` },
+    branch: ["L\\-10"],
+
+    cost: ['leaves', 'e6000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "seeds",
+      calc: () => Decimal.add(player.age, 1).pow(.08),
+    }),
+  },
+  "L\\-11": {
+    get description() { return `<b>LR2</b>'s level boosts Bacteria's limit at a reduced rate.` },
+    branch: ["L\\-10"],
+
+    cost: ['leaves', 'e4750'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: "bacteria-limit",
+      calc: () => softcap(Decimal.mul(player.repeatable_upgrades["LR\\2"][0], .015).add(1), 2, .5, "P"),
+    }),
+  },
+  "L\\-10": {
+    permanent: true,
+    get description() { return `Unlock a new set of Challenges permanently.` },
+    branch: ["L\\-9"],
+
+    cost: ['leaves', 'e3150'],
+  },
+  "L\\-9": {
+    get description() { return `Bacteria Types also increase Bacteria's limit.` },
+    branch: ["L\\-6","L\\-7","L\\-8"],
+
+    cost: ['leaves', 'e2750'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: "bacteria-limit",
+      calc: () => Decimal.sub(player.bacteria.types, 1).max(0).mul(.05).add(1),
+    }),
+  },
+  "L\\-8": {
+    get description() { return `<b>${formatPow(1.05)}</b> to static Entropy multiplier.` },
+    branch: ["L\\-5"],
+
+    cost: ['leaves', 'e2250'],
+
+    effect: new Effect({
+      type: EffectType.BaseExponent,
+      static: true,
+      group: 'entropy',
+      calc: () => 1.05,
+    }),
+  },
+  "L\\-7": {
+    get description() { return `<b>${formatMult(1e3)}</b> to Tree aging speed and Cell replication speed.` },
+    branch: ["L\\-5"],
+
+    cost: ['leaves', 'e2000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['age','cell-speed'],
+      calc: () => 1e3,
+    }),
+  },
+  "L\\-6": {
+    get description() { return `Fruits boost Leaves at a reduced rate.` },
+    branch: ["L\\-5"],
+
+    cost: ['leaves', 'e1750'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "leaves",
+      calc: () => expPow(Decimal.add(player.fruits, 1), .5),
+    }),
+  },
+  "L\\-5": {
+    condition: () => hasUpgrade("RO\\1"),
+    get description() { return `<i>Welcome back!</i> <b>${formatMult(1e10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["L\\-4"],
+
+    cost: ['leaves', 'e1500'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 1e10,
+    }),
+  },
   "L\\-4": {
     get description() { return `<i>Prepare for the next layer.</i> <b>${formatMult(1e25)}</b> to Leaves.` },
     branch: ["L\\-3"],
@@ -921,7 +1020,7 @@ export const Upgrades: Record<string, {
       type: EffectType.Multiplier,
       static: false,
       group: 'seeds',
-      calc() { return Decimal.pow(this.variables.base, temp.purchasedUpgrades) },
+      calc() { return Decimal.pow(this.variables.base, temp.purchasedUpgrades).pow(Effect.effect("upg-F\\47")) },
     }),
   },
   "S\\21": {
@@ -1223,6 +1322,19 @@ export const Upgrades: Record<string, {
       calc: () => 1e9,
     }),
   },
+  "S\\46": {
+    get description() { return `<b>${formatMult(2)}</b> to Roots.` },
+    branch: ["S\\45"],
+
+    cost: ['seeds', 'e3750'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'roots',
+      calc: () => 2,
+    }),
+  },
   //#endregion Seed
 
   //#region Fruit
@@ -1269,7 +1381,7 @@ export const Upgrades: Record<string, {
       type: EffectType.Multiplier,
       static: false,
       group: 'age',
-      calc: () => Decimal.div(player.leaves, 1e18).add(10).log10(),
+      calc: () => hasUpgrade("RO\\12") ? expPow(Decimal.add(player.leaves, 1), .5) : Decimal.div(player.leaves, 1e18).add(10).log10(),
     }),
   },
   "F\\5": {
@@ -1720,6 +1832,103 @@ export const Upgrades: Record<string, {
       calc: () => 1e9,
     }),
   },
+  "F\\40": {
+    get description() { return `<b>${formatMult(10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["F\\39"],
+
+    cost: ['fruits', 'e600'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 10,
+    }),
+  },
+  "F\\41": {
+    get description() { return `<b>${formatMult(10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["F\\40"],
+
+    cost: ['fruits', 'e625'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 10,
+    }),
+  },
+  "F\\42": {
+    get description() { return `<b>${formatMult(10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["F\\41"],
+
+    cost: ['fruits', 'e650'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 10,
+    }),
+  },
+  "F\\43": {
+    get description() { return `<b>${formatMult(10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["F\\42"],
+
+    cost: ['fruits', 'e675'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 10,
+    }),
+  },
+  "F\\44": {
+    get description() { return `<b>${formatMult(10)}</b> to Leaves, Seeds, and Fruits.` },
+    branch: ["F\\43"],
+
+    cost: ['fruits', 'e700'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['leaves','seeds','fruits'],
+      calc: () => 10,
+    }),
+  },
+  "F\\45": {
+    permanent: true,
+    get description() { return `Unlock a new repeatable Fruit upgrade permanently.` },
+    branch: ["F\\44"],
+
+    cost: ['fruits', 'e750'],
+  },
+  "F\\46": {
+    get description() { return `<b>${formatMult(1.75)}</b> to Roots.` },
+    branch: ["F\\45"],
+
+    cost: ['fruits', 'e2000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'roots',
+      calc: () => 1.75,
+    }),
+  },
+  "F\\47": {
+    get description() { return `<b>S20</b> is raised by Fruits.` },
+    branch: ["F\\46"],
+
+    cost: ['fruits', 'e2800'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      calc: () => Decimal.add(player.fruits, 1).log10().div(1500).add(1),
+    }),
+  },
   //#endregion
 
   //#region Entropy
@@ -2157,6 +2366,633 @@ export const Upgrades: Record<string, {
       static: true,
       calc: () => .9,
     }),
+  },
+  "E\\39": {
+    get description() { return `<b>+15</b> to <b>SR1</b>'s level cap.` },
+    branch: ["E\\38"],
+
+    cost: ['entropy', 1e33],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: true,
+      calc: () => 15,
+    }),
+  },
+  "E\\40": {
+    get description() { return `<b>${formatMult(1.15)}</b> to Roots.` },
+    branch: ["E\\39"],
+
+    cost: ['entropy', 1e36],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 1.15,
+    }),
+  },
+  "E\\41": {
+    get description() { return `The <b>SR1</b>'s base is increased by <b>FR1</b>'s level.` },
+    branch: ["E\\40"],
+
+    cost: ['entropy', 1e39],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.root(player.repeatable_upgrades["FR\\1"][0], 2),
+    }),
+  },
+  "E\\42": {
+    get description() { return `The first Cell upgrade is exponentially stronger.` },
+    branch: ["E\\41"],
+
+    cost: ['entropy', 1e42],
+  },
+  "E\\43": {
+    get description() { return `Fruits divide <b>LR1</b>'s cost.` },
+    branch: ["E\\42"],
+
+    cost: ['entropy', 2e46],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.max(player.fruits, 1).pow(-1),
+    }),
+  },
+  "E\\44": {
+    get description() { return `The <b>FR1</b>'s level cap is increased by <b>LR1</b>'s level.` },
+    branch: ["E\\43"],
+
+    cost: ['entropy', 1e48],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.div(player.repeatable_upgrades["LR\\1"][0], 10).add(1),
+    }),
+  },
+  "E\\45": {
+    get description() { return `Fruits<sup>0.5</sup> divide <b>SR1</b>'s cost.` },
+    branch: ["E\\42"],
+
+    cost: ['entropy', 1e54],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.max(player.fruits, 1).root(-2),
+    }),
+  },
+  "E\\46": {
+    get description() { return `Fruits<sup>0.15</sup> divide <b>FR1</b>'s cost.` },
+    branch: ["E\\45"],
+
+    cost: ['entropy', 1e60],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.max(player.fruits, 1).pow(-.15),
+    }),
+  },
+  "E\\47": {
+    get description() { return `The <b>FR1</b>'s level cap is increased by total Roots.` },
+    branch: ["E\\45"],
+
+    cost: ['entropy', 1e63],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 1).log2().add(1),
+    }),
+  },
+  "E\\48": {
+    get description() { return `Composting speed divides the first 3 Fertilizers' cost.` },
+    branch: ["E\\44"],
+
+    cost: ['entropy', 1e79],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.max(temp.compostingSpeed, 1).pow(-1),
+    }),
+  },
+  "E\\49": {
+    get description() { return `<b>${formatMult(1.5)}</b> to Roots.` },
+    branch: ["E\\48"],
+
+    cost: ['entropy', 1e83],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 1.5,
+    }),
+  },
+  "E\\50": {
+    get description() { return `Entropy increases the exponent of Roots gain formula.` },
+    branch: ["E\\49"],
+
+    cost: ['entropy', 1e100],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.div(player.entropy, 1e100).add(1).log10().div(50).root(2).add(.01),
+    }),
+  },
+  "E\\51": {
+    get description() { return `The <b>FR1</b>'s base is increased by Ash.` },
+    branch: ["E\\49"],
+
+    cost: ['entropy', 1e112],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      calc: () => Decimal.add(player.furnace.ash, 1).log10().div(1e3).root(2).div(1.5).add(1),
+    }),
+  },
+  "E\\52": {
+    get description() { return `Tree age slowdown is <b>10%</b> weaker.` },
+    branch: ["E\\50"],
+
+    cost: ['entropy', 1e121],
+  },
+  //#endregion
+  //#region Roots
+  "RO\\1": {
+    condition: () => player.first.root,
+    permanent: true,
+    get description() { return `Unlock new Leaf upgrades permanently.` },
+    branch: [],
+
+    cost: ['roots', 1],
+  },
+  "RO\\M1": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Entropy Upgrades</b> permanently.` },
+    branch: ["RO\\1"],
+
+    nospend: true,
+    cost: ['total-roots', 2],
+  },
+  "RO\\M2": {
+    get description() { return `<b>Composting Automation</b> applies to the fourth Composter.` },
+    branch: ["RO\\M1"],
+
+    nospend: true,
+    cost: ['total-roots', 5],
+  },
+  "RO\\M3": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Cell Upgrades</b> permanently.` },
+    branch: ["RO\\M2"],
+
+    nospend: true,
+    cost: ['total-roots', 10],
+  },
+  "RO\\M4": {
+    get description() { return `<b>${formatMult(3)}</b> to Entropy. Start with <b>${format(DC.DE308)}</b> Cells and <b>1</b> Bacteria Type on Reinforcement.` },
+    branch: ["RO\\M3"],
+
+    nospend: true,
+    cost: ['total-roots', 20],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'entropy',
+      calc: () => 3,
+    }),
+  },
+  "RO\\M5": {
+    get description() { return `Weather goals no longer reset on Reinforcement.` },
+    branch: ["RO\\M4"],
+
+    nospend: true,
+    cost: ['total-roots', 50],
+  },
+  "RO\\M6": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Bacteria Upgrades</b> permanently.` },
+    branch: ["RO\\M5"],
+
+    nospend: true,
+    cost: ['total-roots', 100],
+  },
+  "RO\\M7": {
+    permanent: true,
+    get description() { return `Passively generate <b>100%</b> of your pending Bacteria permanently.` },
+    branch: ["RO\\M6"],
+
+    nospend: true,
+    cost: ['total-roots', 200],
+  },
+  "RO\\M8": {
+    get description() { return `Cells can now exceed their limit, so Bacteria Types are automatically gained.` },
+    branch: ["RO\\M6"],
+
+    nospend: true,
+    cost: ['total-roots', 500],
+  },
+
+  "RO\\2": {
+    get description() { return `<b>LR1</b>'s initial cost is lowered to <b>1</b>, and its level cap is increased by Entropy.` },
+    branch: ["RO\\1"],
+
+    nospend: true,
+    cost: ['total-roots', 1],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.max(player.entropy, 1).log10(),
+    }),
+  },
+  "RO\\3": {
+    get description() { return `Unlock the fourth Composter.` },
+    branch: ["RO\\1"],
+
+    nospend: true,
+    cost: ['total-roots', 1],
+  },
+  "RO\\4": {
+    get description() { return `<b>SR1</b>'s initial cost is lowered to <b>1</b>, and its level cap is increased by total Roots. <i><b>${formatMult(1.5)}</b> to cost of <b>RO4-7</b> (floored).</i>` },
+    branch: ["RO\\1"],
+
+    get cost () { return ['roots', Math.floor(1.5 ** (+hasUpgrade("RO\\5")+ +hasUpgrade("RO\\6")+ +hasUpgrade("RO\\7")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 1).log10().root(1.75).add(1.5),
+    }),
+  },
+  "RO\\5": {
+    get description() { return `<b>${formatMult(10)}</b> to Bactieria replication speed, and its limit is raised by total Roots. <i><b>${formatMult(1.5)}</b> to cost of <b>RO4-7</b> (floored).</i>` },
+    branch: ["RO\\1"],
+
+    get cost () { return ['roots', Math.floor(1.5 ** (+hasUpgrade("RO\\4")+ +hasUpgrade("RO\\6")+ +hasUpgrade("RO\\7")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: "bacteria-limit",
+      calc: () => Decimal.add(player.root.total, 1).log(30).add(1),
+    }),
+  },
+  "RO\\6": {
+    get description() { return `<b>${formatPow(1.05)}</b> to Leaves. <i><b>${formatMult(1.5)}</b> to cost of <b>RO4-7</b> (floored).</i>` },
+    branch: ["RO\\2"],
+
+    get cost () { return ['roots', Math.floor(1.5 ** (+hasUpgrade("RO\\5")+ +hasUpgrade("RO\\4")+ +hasUpgrade("RO\\7")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: 'leaves',
+      calc: () => 1.05,
+    }),
+  },
+  "RO\\7": {
+    get description() { return `Entropy boosts itself logarithmically. <i><b>${formatMult(1.5)}</b> to cost of <b>RO4-7</b> (floored).</i>` },
+    branch: ["RO\\2"],
+
+    get cost () { return ['roots', Math.floor(1.5 ** (+hasUpgrade("RO\\5")+ +hasUpgrade("RO\\6")+ +hasUpgrade("RO\\4")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'entropy',
+      calc: () => Decimal.add(player.entropy, 10).log10(),
+    }),
+  },
+  "RO\\8": {
+    get description() { return `Superscaled Fertilizers are delayed by total Roots.` },
+    branch: ["RO\\4","RO\\5"],
+
+    cost: ['roots', 4],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 1).log(1.25),
+    }),
+  },
+  "RO\\9": {
+    get description() { return `<b>${formatPow(1.5)}</b> to static TAS multiplier.` },
+    branch: ["RO\\6","RO\\7"],
+
+    cost: ['roots', 5],
+
+    effect: new Effect({
+      type: EffectType.BaseExponent,
+      static: true,
+      group: "age",
+      calc: () => 1.5,
+    }),
+  },
+  "RO\\10": {
+    get description() { return `<b>LR1</b>'s level cap is increased by total Roots.` },
+    branch: ["RO\\8"],
+
+    cost: ['roots', 5],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 1).log(1.2).add(5),
+    }),
+  },
+  "RO\\11": {
+    get description() { return `Divide <b>LR1</b>, <b>SR1</b>, and <b>FR1</b>' cost scaling by <b>10</b>.` },
+    branch: ["RO\\9"],
+
+    cost: ['roots', 7],
+  },
+  "RO\\12": {
+    get description() { return `Improve <b>F4</b>'s effect.` },
+    branch: ["RO\\10"],
+
+    cost: ['roots', 8],
+  },
+  "RO\\13": {
+    get description() { return `Leaves increase the exponent of Roots gain formula.` },
+    branch: ["RO\\11"],
+
+    cost: ['roots', 9],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.leaves, 1).log10().div(3000).root(2),
+    }),
+  },
+  "RO\\14": {
+    get description() { return `<b>${formatMult(50)}</b> to Entropy.` },
+    branch: ["RO\\11"],
+
+    cost: ['roots', 13],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "entropy",
+      calc: () => 50,
+    }),
+  },
+  "RO\\15": {
+    permanent: true,
+    get description() { return `Unlock <b>the Incinerator</b> permanently.` },
+    branch: ["RO\\12"],
+
+    cost: ['roots', 20],
+  },
+  "RO\\16": {
+    get description() { return `Unlock the third Bacteria upgrade.` },
+    branch: ["RO\\12"],
+
+    cost: ['roots', 25],
+  },
+  "RO\\17": {
+    get description() { return `<b>${formatMult(1e33)}</b> to Leaves. <i><b>${formatMult(2)}</b> to cost of <b>RO17-20</b>.</i>` },
+    branch: ["RO\\10"],
+
+    get cost () { return ['roots', 22 * Math.floor(2 ** (+hasUpgrade("RO\\18")+ +hasUpgrade("RO\\19")+ +hasUpgrade("RO\\20")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "leaves",
+      calc: () => 1e33,
+    }),
+  },
+  "RO\\18": {
+    get description() { return `<b>${formatMult(1e18)}</b> to Seeds. <i><b>${formatMult(2)}</b> to cost of <b>RO17-20</b>.</i>` },
+    branch: ["RO\\10"],
+
+    get cost () { return ['roots', 22 * Math.floor(2 ** (+hasUpgrade("RO\\17")+ +hasUpgrade("RO\\19")+ +hasUpgrade("RO\\20")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "seeds",
+      calc: () => 1e18,
+    }),
+  },
+  "RO\\19": {
+    get description() { return `<b>${formatMult(1e10)}</b> to Fruits. <i><b>${formatMult(2)}</b> to cost of <b>RO17-20</b>.</i>` },
+    branch: ["RO\\13"],
+
+    get cost () { return ['roots', 22 * Math.floor(2 ** (+hasUpgrade("RO\\18")+ +hasUpgrade("RO\\17")+ +hasUpgrade("RO\\20")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fruits",
+      calc: () => 1e10,
+    }),
+  },
+  "RO\\20": {
+    get description() { return `<b>${formatMult(100)}</b> to Entropy. <i><b>${formatMult(2)}</b> to cost of <b>RO17-20</b>.</i>` },
+    branch: ["RO\\13"],
+
+    get cost () { return ['roots', 22 * Math.floor(2 ** (+hasUpgrade("RO\\18")+ +hasUpgrade("RO\\19")+ +hasUpgrade("RO\\17")))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "entropy",
+      calc: () => 100,
+    }),
+  },
+  "RO\\21": {
+    get description() { return `<b>${formatMult(1.75)}</b> to Roots.` },
+    branch: ["RO\\13"],
+
+    cost: ['roots', 50],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 1.75,
+    }),
+  },
+  "RO\\22": {
+    get description() { return `<b>${formatMult(2)}</b> to Entropy.` },
+    branch: ["RO\\15"],
+
+    cost: ['roots', 500],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "entropy",
+      calc: () => 2,
+    }),
+  },
+  "RO\\23": {
+    get description() { return `Total Roots boost the first Bacteria effect at an extremely reduced rate.` },
+    branch: ["RO\\15"],
+
+    cost: ['roots', 500],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 10).log10().log10().div(5).add(1),
+    }),
+  },
+  "RO\\24": {
+    get description() { return `<b>${formatPow(1.02)}</b> to Leaves. <i><b>${formatMult(10)}</b> to cost of <b>RO24-26</b>.</i>` },
+    branch: ["RO\\15"],
+
+    get cost () { return ['roots', 750 * 10 ** (+hasUpgrade("RO\\25")+ +hasUpgrade("RO\\26"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "leaves",
+      calc: () => 1.02,
+    }),
+  },
+  "RO\\25": {
+    get description() { return `<b>${formatPow(1.02)}</b> to Seeds. <i><b>${formatMult(10)}</b> to cost of <b>RO24-26</b>.</i>` },
+    branch: ["RO\\15"],
+
+    get cost () { return ['roots', 750 * 10 ** (+hasUpgrade("RO\\24")+ +hasUpgrade("RO\\26"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "seeds",
+      calc: () => 1.02,
+    }),
+  },
+  "RO\\26": {
+    get description() { return `<b>${formatPow(1.02)}</b> to Fruits. <i><b>${formatMult(10)}</b> to cost of <b>RO24-26</b>.</i>` },
+    branch: ["RO\\15"],
+
+    get cost () { return ['roots', 750 * 10 ** (+hasUpgrade("RO\\25")+ +hasUpgrade("RO\\24"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "fruits",
+      calc: () => 1.02,
+    }),
+  },
+  "RO\\27": {
+    condition: () => player.discovered_upgrades['RO\\24'] || player.discovered_upgrades['RO\\25'] || player.discovered_upgrades['RO\\26'],
+    get description() { return `<b>${formatMult(1.5)}</b> to Roots.` },
+    branch: [],
+
+    cost: ['roots', 3500],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 1.5,
+    }),
+  },
+  "RO\\28": {
+    get description() { return `Increase Incinerator's maximum input by <b>5</b>.` },
+    branch: ["RO\\15"],
+
+    cost: ['roots', 300],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: true,
+      calc: () => 5,
+    }),
+  },
+  "RO\\29": {
+    get description() { return `You can incinerate Seeds.` },
+    branch: ["RO\\28"],
+
+    cost: ['roots', 7500],
+  },
+  "RO\\30": {
+    get description() { return `<b>${formatMult(1e100)}</b> to Leaves. <i>I don't care about that Infinistal's warning about static multiplier.</i>` },
+    branch: ["RO\\24"],
+
+    cost: ['roots', 15000],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "leaves",
+      calc: () => 1e100,
+    }),
+  },
+  "RO\\31": {
+    get description() { return `Total Roots<sup>15</sup> boost Leaves. <i><b>${formatMult(3)}</b> to cost of <b>RO31-34</b>.</i>` },
+    branch: ["RO\\17"],
+
+    get cost () { return ['roots', 3e4 * 3 ** (+hasUpgrade("RO\\32")+ +hasUpgrade("RO\\33")+ +hasUpgrade("RO\\34"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "leaves",
+      calc: () => Decimal.add(player.root.total, 1).pow(15),
+    }),
+  },
+  "RO\\32": {
+    get description() { return `Total Roots<sup>10</sup> boost Seeds. <i><b>${formatMult(3)}</b> to cost of <b>RO31-34</b>.</i>` },
+    branch: ["RO\\18"],
+
+    get cost () { return ['roots', 3e4 * 3 ** (+hasUpgrade("RO\\31")+ +hasUpgrade("RO\\33")+ +hasUpgrade("RO\\34"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "seeds",
+      calc: () => Decimal.add(player.root.total, 1).pow(10),
+    }),
+  },
+  "RO\\33": {
+    get description() { return `Total Roots<sup>7</sup> boost Fruits. <i><b>${formatMult(3)}</b> to cost of <b>RO31-34</b>.</i>` },
+    branch: ["RO\\19"],
+
+    get cost () { return ['roots', 3e4 * 3 ** (+hasUpgrade("RO\\32")+ +hasUpgrade("RO\\31")+ +hasUpgrade("RO\\34"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "fruits",
+      calc: () => Decimal.add(player.root.total, 1).pow(7),
+    }),
+  },
+  "RO\\34": {
+    get description() { return `Total Roots<sup>1.5</sup> boost Entropy. <i><b>${formatMult(3)}</b> to cost of <b>RO31-34</b>.</i>` },
+    branch: ["RO\\20"],
+
+    get cost () { return ['roots', 3e4 * 3 ** (+hasUpgrade("RO\\32")+ +hasUpgrade("RO\\33")+ +hasUpgrade("RO\\31"))] as [string, DecimalSource] },
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "entropy",
+      calc: () => Decimal.add(player.root.total, 1).pow(1.5),
+    }),
+  },
+  "RO\\35": {
+    permanent: true,
+    get description() { return `Unlock <b>the Furnace</b> permanently.` },
+    branch: ["RO\\27"],
+
+    cost: ['roots', 150000],
   },
   //#endregion
 };
