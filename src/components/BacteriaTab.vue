@@ -18,7 +18,7 @@ import Decimal from 'break_eternity.js';
     <span class="big-text">{{ formatPlus(Bacteria.effect(1)) }}</span> scaled Fertilizer starting,
     <span class="big-text">{{ formatMult(Bacteria.effect(2)) }}</span> Composting speed.
   </p>
-  <PrimaryButton class="bacteria-button" id="bacteria-reset" :enabled="Resets.bacteria.reached" @click="Resets.bacteria.perform()">
+  <PrimaryButton class="upgrade-bacteria" id="bacteria-reset" :enabled="Resets.bacteria.reached" @click="Resets.bacteria.perform()">
     <div v-html="Resets.bacteria.description"></div>
   </PrimaryButton>
   <BigUpgradeGroup :group="'bacteria'" />

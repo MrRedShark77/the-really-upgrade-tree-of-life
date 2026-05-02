@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BigUpgradeColors, BigUpgradeGroups } from '@/data/big_upgrades';
+import { BigUpgradeGroups } from '@/data/big_upgrades';
 import BigUpgradeItem from './BigUpgradeItem.vue';
 
 const { group, width } = defineProps({
@@ -13,6 +13,6 @@ const { group, width } = defineProps({
 
 <template>
   <div class="big-upgrades-table" :style="{'--width': width}">
-    <BigUpgradeItem v-for="x in BigUpgradeGroups[group]" :key="'bu'+x" :n="x" :style="{'--button-color': BigUpgradeColors[group]}" />
+    <BigUpgradeItem v-for="x in BigUpgradeGroups[group]" :key="'bu'+x" :n="x" :class="{['upgrade-'+group]: true}" />
   </div>
 </template>

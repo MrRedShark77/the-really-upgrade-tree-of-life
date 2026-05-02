@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import { Layers } from '@/data/layers';
 import { format, formatGain } from '@/utils/formats';
 import Decimal from 'break_eternity.js';
@@ -13,7 +13,7 @@ import { horHandleScroll } from '@/utils/misc';
 
 const { layer_id } = defineProps<{ layer_id: string }>()
 
-const L = Layers[layer_id], C = Currencies[L.currency as Currency], R = Resets[L.reset]
+const L = Layers[layer_id], C = Currencies[L.currency], R = Resets[L.reset]
 
 const class_L = 'upgrade-'+L.upgrade_group
 

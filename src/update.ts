@@ -1,21 +1,22 @@
 import type { DecimalSource } from "break_eternity.js";
-import { Currencies, type Currency } from "./data/currencies";
+import { Currencies } from "./data/currencies";
 import { player, state, temp } from "./main";
 import { Effect } from "./utils/effect";
 import { deepAssign } from "./utils/saveload";
 import Decimal from "break_eternity.js";
 import { hasUpgrade, UpgradeKeys } from "./data/upgrades";
 import { Composter } from "./data/composter";
-import { Cell } from "./data/cell";
+import { Cell, Virus } from "./data/cell";
 import { Bacteria } from "./data/bacteria";
 import { Auto, AutoKeys } from "./data/automation";
-import { Weathers } from "./data/challenges";
-import { scale } from "./utils/decimal";
+import { Seasons, Weathers } from "./data/challenges";
+import { DC, scale } from "./utils/decimal";
 import { Furnace } from "./data/furnace";
+import { FallenLeaves } from "./data/fallen";
 
 // Calculation
 
-let diff = 0;
+let diff = 0, date = Date.now();
 
 export function loop() {
   // requestAnimationFrame(loop)
@@ -44,7 +45,7 @@ export function calc(dt: number) {
       P.active = false;
 
       P.fertilizers = Decimal.add(P.fertilizers, 1)
-      if (hasUpgrade("E\\21")) P.fertilizers = P.fertilizers.max(Composter.calculateFeritizerBulk(i, Currencies[Composter.fertilizers[i].cost[0] as Currency].amount));
+      if (hasUpgrade("E\\21")) P.fertilizers = P.fertilizers.max(Composter.calculateFeritizerBulk(i, Currencies[Composter.fertilizers[i].cost[0]].amount));
     }
   }
 
@@ -57,12 +58,12 @@ export function calc(dt: number) {
 
     if (hasUpgrade("S\\25")) SR -= 1.5;
 
-    player.PE = L.root(LR).mul(S.root(SR)).mul(F)
+    player.PE = Effect.calculateEffects('PE', L.root(LR).mul(S.root(SR)).mul(F))
   } else player.PE = 0;
 
   if (hasUpgrade("E\\1")) {
     player.cell.amount = Cell.calc(dt);
-    player.auto.total = scale(scale(Decimal.max(player.cell.amount, 1).log(1e12).sub(1), 100, 2, "L", true), 400, 2, "P", true).floor().add(1).max(player.auto.total);
+    player.auto.total = scale(scale(scale(Decimal.max(player.cell.amount, 1).log(1e12).sub(1), 100, 2, "L", true), 400, 2, "P", true), 1000, 2, "ME2", true).floor().add(1).max(player.auto.total);
 
     if (hasUpgrade("RO\\M8") && Decimal.gte(player.cell.amount, Cell.cap)) player.bacteria.types = Decimal.add(player.bacteria.types, 1).max(Bacteria.BacteriaTypeBulk);
   }
@@ -75,10 +76,25 @@ export function calc(dt: number) {
     if (Decimal.gte(player.furnace.ash, Furnace.coal.require)) player.furnace.coal = Decimal.add(player.furnace.coal, 1).max(Furnace.coal.bulk);
   }
 
+  if (player.first.season[1]) {
+    let r = DC.D1
+
+    if (!player.first.fallen[FallenLeaves.resources.length-1]) for (let i = 0; i < FallenLeaves.resources.length; i++) {
+      r = r.mul(FallenLeaves.resources[i].ratio)
+      if (!player.first.fallen[i] && r.lte(temp.basket_cap)) player.first.fallen[i] = true;
+    }
+  }
+
+  if (Seasons.in(2)) player.virus = Virus.calc(dt);
+
+  if (Decimal.gte(player.virus, 'ee5')) player.first.beneficial_virus = true;
+
   for (const i in Currencies) {
-    const C = Currencies[i as Currency]
+    const C = Currencies[i]
     C.amount = Decimal.mul(C.gain, C.passive).mul(dt).add(C.amount)
   }
+
+  if (hasUpgrade("FA\\8")) player.root.total = Decimal.mul(temp.currencies.roots, Currencies.roots.passive).mul(dt).add(player.root.total);
 
   for (const i of AutoKeys) {
     const A = Auto[i]
@@ -108,6 +124,11 @@ export type TempData = {
 
   weathers: DecimalSource[]
 
+  fallen_speed: DecimalSource
+  basket_cap: DecimalSource
+
+  virus_mult: DecimalSource
+
   [index: string]: unknown;
 }
 
@@ -133,6 +154,11 @@ export function getTempData(): TempData {
 
     bacteria_limit: 0,
     compostingSpeed: 1,
+
+    fallen_speed: 2,
+    basket_cap: 25,
+
+    virus_mult: 1,
 
     weathers: [],
   };
@@ -168,7 +194,7 @@ export function updateTemp() {
 
   temp.scaled_fertilizers = [
     [Decimal.add(15, Effect.effect("upg-E\\10")).add(Bacteria.effect(1)), 2, 1],
-    [Weathers.in(1) ? 6 : Decimal.add(100, Effect.effect("upg-RO\\8")), 2, Decimal.mul(Weathers.nerf(1), Effect.effect("upg-E\\29")).mul(Effect.effect("upg-E\\38"))],
+    [Weathers.in(1) ? 6 : Decimal.add(100, Effect.effect("upg-RO\\8")).add(Effect.effect("upg-RO\\36")).add(Effect.effect("bupg-BV\\1")), 2, Decimal.mul(Weathers.nerf(1), Effect.effect("upg-E\\29")).mul(Effect.effect("upg-E\\38"))],
   ]
 
   temp.cell_overflow = [
@@ -178,5 +204,10 @@ export function updateTemp() {
 
   temp.compostingSpeed = Effect.calculateEffects("composting-speed")
 
-  for (const i in Currencies) temp.currencies[i] = Currencies[i as Currency].gain;
+  temp.fallen_speed = Effect.calculateEffects("fallen-speed", 2)
+  temp.basket_cap = Effect.calculateEffects("fallen-basket", 25)
+
+  temp.virus_mult = Virus.speed
+
+  for (const i in Currencies) temp.currencies[i] = Currencies[i].gain;
 }

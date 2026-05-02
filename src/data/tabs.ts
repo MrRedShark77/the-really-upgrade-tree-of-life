@@ -11,6 +11,8 @@ import TheStatueTab from "@/components/TheStatueTab.vue";
 import Decimal from "break_eternity.js";
 import OptionsTab from "@/components/OptionsTab.vue";
 import BaseTreeTab from "@/components/tree/BaseTreeTab.vue";
+import FallenTab from "@/components/tree/FallenTab.vue";
+import VirusTab from "@/components/VirusTab.vue";
 
 export const TABS: {
   name: string;
@@ -49,6 +51,7 @@ export const TABS: {
       [CellularTab, "Cells"],
       [AutomationTab, "Automation"],
       [BacteriaTab, "Bacteria", () => Decimal.gt(player.bacteria.types, 0)],
+      [VirusTab, "Virus", () => player.first.virus],
     ],
   },{ // 4
     name: "Challenges",
@@ -72,7 +75,8 @@ export const TABS: {
     condition: () => hasUpgrade('RO\\15'),
 
     stabs: [
-      [BaseTreeTab],
+      [BaseTreeTab, "Incinerator"],
+      [FallenTab, "Fallen Leaves", () => player.first.season[1]],
     ],
   },
 ]

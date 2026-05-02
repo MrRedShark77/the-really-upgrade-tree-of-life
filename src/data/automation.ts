@@ -106,6 +106,16 @@ export const Auto: Record<string, {
 
     tick() { buyAllUpgrades("E", true, true) },
   },
+  "ERU": {
+    condition: () => hasUpgrade("E\\53"),
+    name: "Repeatable Entropy Upgrades Automation",
+    get description() { return `Automate repeatable Entropy upgrades.` },
+    cost: 80,
+
+    color: '#b1c4eb',
+
+    tick() { purchaseAllRepeatableUpgrades("ER",true) },
+  },
 
   "CU": {
     condition: () => hasUpgrade("RO\\M3"),
@@ -127,6 +137,57 @@ export const Auto: Record<string, {
     color: '#9ae8a5',
 
     tick() { purchaseAllBigUpgrades("bacteria") },
+  },
+
+  "FAU0": {
+    condition: () => hasUpgrade("FA\\3"),
+    name: "Fallen Leaf Upgrades Automation",
+    get description() { return `Automate Fallen Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, #fe0, #f40)',
+
+    tick() { purchaseAllBigUpgrades("fallen-0") },
+  },
+  "FAU1": {
+    condition: () => hasUpgrade("FA\\4"),
+    name: "Bronze Leaf Upgrades Automation",
+    get description() { return `Automate Bronze Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, #CD7F32, #f3455a)',
+
+    tick() { purchaseAllBigUpgrades("fallen-1") },
+  },
+  "FAU2": {
+    condition: () => hasUpgrade("FA\\5"),
+    name: "Silver Leaf Upgrades Automation",
+    get description() { return `Automate Silver Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, #c4c4c4, #888)',
+
+    tick() { purchaseAllBigUpgrades("fallen-2") },
+  },
+  "FAU3": {
+    condition: () => hasUpgrade("FA\\6"),
+    name: "Golden Leaf Upgrades Automation",
+    get description() { return `Automate Golden Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, gold, #b80)',
+
+    tick() { purchaseAllBigUpgrades("fallen-3") },
+  },
+  "FAU4": {
+    condition: () => hasUpgrade("FA\\7"),
+    name: "Platinum Leaf Upgrades Automation",
+    get description() { return `Automate Platinum Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, #eef, #c4c4ff)',
+
+    tick() { purchaseAllBigUpgrades("fallen-4") },
   },
 }
 

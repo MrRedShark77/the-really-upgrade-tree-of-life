@@ -3,7 +3,7 @@ import { advanced_scale, DC } from "@/utils/decimal"
 import { Effect, EffectType } from "@/utils/effect";
 import Decimal, { type DecimalSource } from "break_eternity.js";
 import { hasUpgrade } from "./upgrades";
-import { Currencies, Currency } from "./currencies";
+import { Currencies } from "./currencies";
 import { Bacteria } from "./bacteria";
 import { getBigUpgradeEffect } from "./big_upgrades";
 import { Seasons, Weathers } from "./challenges";
@@ -34,7 +34,7 @@ export const Composter = {
   },
 
   get fertilizerBase(): DecimalSource {
-    if (Seasons.in(0)) return 1;
+    if (Seasons.in(0) || Seasons.in(1)) return 1;
     return Decimal.add(1.5, Bacteria.effect(0)).add(this.entropyBoost)
   },
 
@@ -67,7 +67,8 @@ export const Composter = {
 
     y = y.pow_base(this.fertilizers[i].cost[1])
 
-    if (i < 3) y = y.mul(Effect.effect("upg-E\\48"));
+    if (i < 3) y = y.mul(Effect.effect("upg-E\\48")).mul(Effect.effect("rupg-FR\\2"));
+    if (i === 3) y = y.mul(Effect.effect("upg-E\\57"));
 
     return y
   },
@@ -79,7 +80,8 @@ export const Composter = {
 
     let y1 = Decimal.max(x, 1)
 
-    if (i < 3) y1 = y1.div(Effect.effect("upg-E\\48"));
+    if (i < 3) y1 = y1.div(Effect.effect("upg-E\\48")).div(Effect.effect("rupg-FR\\2"));
+    if (i === 3) y1 = y1.div(Effect.effect("upg-E\\57"));
 
     y1 = y1.log(this.fertilizers[i].cost[1])
 
@@ -96,7 +98,7 @@ export const Composter = {
   },
 
   compost(i: number, no_spend = false) {
-    const P = player.composter[i], F = this.fertilizers[i], C = Currencies[F.cost[0] as Currency]
+    const P = player.composter[i], F = this.fertilizers[i], C = Currencies[F.cost[0]]
     let cost
 
     if (P.active || !F.unl() || Decimal.lt(C.amount, cost = this.calculateFeritizerCost(i, P.fertilizers))) return;

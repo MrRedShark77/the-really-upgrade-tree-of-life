@@ -2,7 +2,7 @@
 import { hasUpgrade, purchaseUpgrade, Upgrades } from '@/data/upgrades';
 import PrimaryButton from './PrimaryButton.vue';
 import { computed } from 'vue';
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import { format } from '@/utils/formats';
 import Decimal from 'break_eternity.js';
 import { replaceSpace } from '@/utils/misc';
@@ -14,7 +14,7 @@ const U = Upgrades[upg_id]
 
 const E = U.effect, hasDisplay = E?.display !== undefined
 
-const cost = computed(() => U.cost[1]), C = Currencies[U.cost[0] as Currency]
+const cost = computed(() => U.cost[1]), C = Currencies[U.cost[0]]
 
 const visible = computed(() => {
   const o = player.options.hide_upgrades

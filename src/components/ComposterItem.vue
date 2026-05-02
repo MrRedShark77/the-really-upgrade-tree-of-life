@@ -4,12 +4,12 @@ import { player, temp } from '@/main';
 import { format, formatPercent, formatPlus, formatTime } from '@/utils/formats';
 import PrimaryButton from './PrimaryButton.vue';
 import { computed } from 'vue';
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import Decimal from 'break_eternity.js';
 
 const { n } = defineProps<{ n: number }>()
 
-const F = Composter.fertilizers[n], P = player.composter[n], C = Currencies[F.cost[0] as Currency]
+const F = Composter.fertilizers[n], P = player.composter[n], C = Currencies[F.cost[0]]
 
 const free = computed(() => Composter.freeFertilizers[n]), cost = computed(() => Composter.calculateFeritizerCost(n, P.fertilizers)), time = computed(() => Composter.calculateTimeRequired(P.fertilizers))
 

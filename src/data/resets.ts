@@ -6,6 +6,7 @@ import { format } from "@/utils/formats"
 import { resetRepeatableUpgradesByGroup } from "./repeatable_upgrades"
 import { resetBigUpgradesByGroup } from "./big_upgrades"
 import { D, DC } from "@/utils/decimal"
+import { FallenLeaves } from "./fallen"
 
 export const Resets: Record<string, {
   reached: boolean
@@ -98,6 +99,8 @@ export const Resets: Record<string, {
         player.composter[i].fertilizers = 0;
       }
 
+      player.virus = 1
+
       if (!hasUpgrade("E\\12")) player.cell.amount = hasUpgrade("RO\\M4") ? DC.DE308 : 1;
 
       Resets.fruits.reset()
@@ -162,9 +165,34 @@ export const Resets: Record<string, {
 
       player.furnace.heat = 0
       player.furnace.ash = 0
-      player.furnace.coal = 0
+      if (!hasUpgrade("RO\\M9")) player.furnace.coal = 0;
 
       Resets.entropy.reset()
+    },
+  },
+  sacred: {
+    get reached() { return Decimal.gte(player.fallen[0], 1e25) },
+
+    get description() {
+      return this.reached ? `Sacrifice your Fallen Leaves for <b>${format(temp.currencies.sacred, 0)}</b> Sacred Leaves` : `Reach <b>${format(1e25)}</b> Fallen Leaves`
+    },
+
+    perform() {
+      if (!this.reached) return;
+
+      player.sacred = Decimal.add(player.sacred, temp.currencies.sacred)
+
+      this.reset();
+    },
+
+    reset() {
+      for (let i = 0; i < FallenLeaves.resources.length; i++) {
+        player.fallen[i] = 0
+        resetBigUpgradesByGroup("fallen-"+i,['fallen-'+i+'\\2'])
+      }
+
+      temp.fallen_speed = 2;
+      temp.basket_cap = 25;
     },
   },
 }

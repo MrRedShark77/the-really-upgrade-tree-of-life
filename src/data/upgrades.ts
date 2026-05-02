@@ -4,7 +4,7 @@ import { format, formatMult, formatPercent, formatPow } from "@/utils/formats"
 import { splitIntoGroups } from "@/utils/misc"
 import type { DecimalSource } from "break_eternity.js"
 import Decimal from "break_eternity.js"
-import { Currencies, Currency } from "./currencies"
+import { Currencies } from "./currencies"
 import { DC, expPow, softcap } from "@/utils/decimal"
 
 export const Upgrades: Record<string, {
@@ -24,6 +24,97 @@ export const Upgrades: Record<string, {
   [index: string]: unknown
 }> = {
   //#region Leaf
+  "L\\-20": {
+    get description() { return `True Autumn Leaves boost Sacred Leaves.` },
+    branch: ["L\\-19"],
+
+    cost: ['leaves', 'e100000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'sacred',
+      calc: () => Decimal.add(player.fallen[6], 1).log(100).add(1),
+    }),
+  },
+  "L\\-19": {
+    get description() { return `Sacred Leaves boost <b>FR2</b>'s base.` },
+    branch: ["L\\-16"],
+
+    cost: ['leaves', 'e90000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.sacred, 1).log(1e3).add(1),
+    }),
+  },
+  "L\\-18": {
+    permanent: true,
+    get description() { return `Unlock <b>Spring</b> season permanently.` },
+    branch: ["L\\-14"],
+
+    cost: ['leaves', 'e75000'],
+  },
+  "L\\-17": {
+    get description() { return `Tree age boosts Entropy.` },
+    branch: ["L\\-13"],
+
+    cost: ['leaves', 'e50000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "entropy",
+      calc: () => Decimal.add(player.age, 1).pow(.003),
+    }),
+  },
+  "L\\-16": {
+    get description() { return `Total Roots increase Basket cap.` },
+    branch: ["L\\-15"],
+
+    cost: ['leaves', 'e32000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'fallen-basket',
+      calc: () => Decimal.add(player.root.total, 1).log10().div(5).add(1),
+    }),
+  },
+  "L\\-15": {
+    get description() { return `<b>${formatMult(3)}</b> to Leaves falling speed and Basket cap.` },
+    branch: ["L\\-14"],
+
+    cost: ['leaves', 'e22500'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['fallen-speed','fallen-basket'],
+      calc: () => 3,
+    }),
+  },
+  "L\\-14": {
+    permanent: true,
+    get description() { return `Unlock <b>Summer</b> season permanently.` },
+    branch: ["L\\-10"],
+
+    cost: ['leaves', 'e10000'],
+  },
+  "L\\-13": {
+    get description() { return `Tree age boosts Fruits.` },
+    branch: ["L\\-12"],
+
+    cost: ['leaves', 'e7300'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "fruits",
+      calc: () => Decimal.add(player.age, 1).pow(.04),
+    }),
+  },
   "L\\-12": {
     get description() { return `Tree age boosts Seeds.` },
     branch: ["L\\-10"],
@@ -1335,6 +1426,85 @@ export const Upgrades: Record<string, {
       calc: () => 2,
     }),
   },
+  "S\\47": {
+    get description() { return `The <b>LR2</b>'s level cap is increased by <b>LR1</b>'s level.` },
+    branch: ["S\\46"],
+
+    cost: ['seeds', 'e5000'],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.div(player.repeatable_upgrades['LR\\1'][0], 10),
+    }),
+  },
+  "S\\48": {
+    get description() { return `<b>${formatMult(5)}</b> to Heat and Ash.` },
+    branch: ["S\\47"],
+
+    cost: ['seeds', 'e6400'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['heat', 'ash'],
+      calc: () => 5,
+    }),
+  },
+  "S\\49": {
+    get description() { return `<b>${formatMult(3)}</b> to Fallen Leaves.` },
+    branch: ["S\\48"],
+
+    cost: ['seeds', 'e13500'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-0",
+      calc: () => 3,
+    }),
+  },
+  "S\\50": {
+    get description() { return `<b>${formatMult(3)}</b> to Roots.` },
+    branch: ["S\\49"],
+
+    cost: ['seeds', 'e43000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 3,
+    }),
+  },
+  "S\\51": {
+    permanent: true,
+    get description() { return `<b>${formatPow(3)}</b> to Virus permanently.` },
+    branch: ["S\\50"],
+
+    cost: ['seeds', 'e56000'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "virus",
+      calc: () => 3,
+    }),
+  },
+  "S\\52": {
+    permanent: true,
+    get description() { return `<b>${formatPow(2)}</b> to Virus permanently.` },
+    branch: ["S\\51"],
+
+    cost: ['seeds', 'e64000'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "virus",
+      calc: () => 2,
+    }),
+  },
   //#endregion Seed
 
   //#region Fruit
@@ -1929,6 +2099,86 @@ export const Upgrades: Record<string, {
       calc: () => Decimal.add(player.fruits, 1).log10().div(1500).add(1),
     }),
   },
+  "F\\48": {
+    get description() { return `Fruits are increased by <b>${formatMult(1e10)}</b> per purchased upgrade, starting at <b>250</b>.` },
+    branch: ["F\\46"],
+
+    cost: ['fruits', 'e3200'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'fruits',
+      calc: () => Decimal.sub(temp.purchasedUpgrades, 249).max(0).pow_base(1e10),
+    }),
+  },
+  "F\\49": {
+    get description() { return `<b>${formatMult(3)}</b> to Fallen Leaves.` },
+    branch: ["F\\48"],
+
+    cost: ['fruits', 'e8000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-0",
+      calc: () => 3,
+    }),
+  },
+  "F\\50": {
+    get description() { return `<b>${formatMult(3)}</b> to Leaves falling speed.` },
+    branch: ["F\\49"],
+
+    cost: ['fruits', 'e18000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-speed",
+      calc: () => 3,
+    }),
+  },
+  "F\\51": {
+    get description() { return `<b>${formatMult(20)}</b> to Leaves falling speed.` },
+    branch: ["F\\50"],
+
+    cost: ['fruits', 'e21000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-speed",
+      calc: () => 20,
+    }),
+  },
+  "F\\52": {
+    permanent: true,
+    get description() { return `<b>${formatPow(3)}</b> to Virus permanently.` },
+    branch: ["F\\51"],
+
+    cost: ['fruits', 'e28000'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "virus",
+      calc: () => 3,
+    }),
+  },
+  "F\\53": {
+    permanent: true,
+    get description() { return `<b>${formatPow(2)}</b> to Virus permanently.` },
+    branch: ["F\\52"],
+
+    cost: ['fruits', 'e35000'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "virus",
+      calc: () => 2,
+    }),
+  },
   //#endregion
 
   //#region Entropy
@@ -2520,10 +2770,215 @@ export const Upgrades: Record<string, {
     }),
   },
   "E\\52": {
-    get description() { return `Tree age slowdown is <b>10%</b> weaker.` },
+    get description() { return `Tree age slowdown is <b>25%</b> weaker.` },
     branch: ["E\\50"],
 
     cost: ['entropy', 1e121],
+  },
+  "E\\53": {
+    permanent: true,
+    get description() { return `Unlock a new repeatable Entropy upgrade permanently.` },
+    branch: ["E\\47"],
+
+    cost: ['entropy', 1e150],
+  },
+  "E\\54": {
+    get description() { return `Add <b>1</b> bonus of first 3 Fertilizers per <b>2</b> Entropy Fertilizers.` },
+    branch: ["E\\48"],
+
+    cost: ['entropy', 1e165],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      group: ['fertilizers-0','fertilizers-1','fertilizers-2'],
+      calc: () => Decimal.div(player.composter[3].fertilizers, 2),
+    }),
+  },
+  "E\\55": {
+    get description() { return `Entropy boosts Roots.` },
+    branch: ["E\\50"],
+
+    cost: ['entropy', 1e175],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'roots',
+      calc: () => Decimal.div(player.entropy, 1e100).add(10).log10().root(2),
+    }),
+  },
+  "E\\56": {
+    get description() { return `The <b>FR1</b>'s level cap is increased by Fallen Leaves.` },
+    branch: ["E\\51"],
+
+    cost: ['entropy', 1e200],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.fallen[0], 10).log10().root(1.5).mul(3).add(1),
+    }),
+  },
+  "E\\57": {
+    get description() { return `The <b>FR2</b>'s effect<sup>0.05</sup> divides Entropy Fertilizer's cost.` },
+    branch: ["E\\54"],
+
+    cost: ['entropy', 1e250],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.pow(Effect.effect("rupg-FR\\2"), .05),
+    }),
+  },
+  "E\\58": {
+    get description() { return `The <b>ER1</b>'s base is increased by total Roots.` },
+    branch: ["E\\53"],
+
+    cost: ['entropy', 1e285],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.root.total, 1).root(3),
+    }),
+  },
+  "E\\59": {
+    get description() { return `The <b>LR2</b> and <b>SR2</b>' level cap is increased by Fallen Leaves.` },
+    branch: ["E\\53"],
+
+    cost: ['entropy', DC.DE308],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.add(player.fallen[0], 1).log10(),
+    }),
+  },
+  "E\\60": {
+    get description() { return `The <b>ER1</b>' level cap is increased by <b>SR2</b>'s level.` },
+    branch: ["E\\59"],
+
+    cost: ['entropy', 'e380'],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.div(player.repeatable_upgrades['SR\\2'][0], 2).add(1),
+    }),
+  },
+  "E\\61": {
+    get description() { return `<b>SR2</b> divides itself.` },
+    branch: ["E\\59"],
+
+    cost: ['entropy', 'e470'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Effect.effect("rupg-SR\\2"),
+    }),
+  },
+  "E\\62": {
+    get description() { return `The <b>SR1</b> and <b>ER1</b>' level cap is increased by Leaves falling speed.` },
+    branch: ["E\\60"],
+
+    cost: ['entropy', 'e560'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(temp.fallen_speed, 1).log(1000).root(2).add(1),
+    }),
+  },
+  "E\\63": {
+    get description() { return `<b>^1.15</b> to <b>LR1</b>, <b>SR1</b>, and <b>FR1</b>' base.` },
+    branch: ["E\\61"],
+
+    cost: ['entropy', 'e610'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      calc: () => 1.15,
+    }),
+  },
+  "E\\64": {
+    get description() { return `The <b>FR2</b>'s level cap is increased by Bacteria.` },
+    branch: ["E\\63"],
+
+    cost: ['entropy', 'e730'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.bacteria.amount, 10).log10().log(1e4).add(1),
+    }),
+  },
+  "E\\65": {
+    get description() { return `Roots divide <b>ROR1</b>'s cost scaling.` },
+    branch: ["E\\63"],
+
+    cost: ['entropy', 'e760'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.root.amount, 10).log10().root(-2),
+    }),
+  },
+  "E\\66": {
+    get description() { return `The <b>LR2</b>'s base is increased by <b>LR2</b>'s level.` },
+    branch: ["E\\65"],
+
+    cost: ['entropy', 'e900'],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      calc: () => Decimal.div(player.repeatable_upgrades['LR\\2'][0], 40).add(1),
+    }),
+  },
+  "E\\67": {
+    get description() { return `Entropy<sup>0.5</sup> boosts Tree aging speed.` },
+    branch: ["E\\66"],
+
+    cost: ['entropy', 'e1100'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "age",
+      calc: () => Decimal.add(player.entropy, 1).root(2),
+    }),
+  },
+  "E\\68": {
+    get description() { return `<b>${formatMult(6)}</b> to Basket cap.` },
+    branch: ["E\\42"],
+
+    cost: ['entropy', 'e1500'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-basket",
+      calc: () => 6,
+    }),
+  },
+  "E\\69": {
+    permanent: true,
+    get description() { return `Entropy boosts Beneficial Virus permanently.` },
+    branch: ["E\\67"],
+
+    cost: ['entropy', 'e2400'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "BV",
+      calc: () => Decimal.add(player.entropy, 1).log10().div(50).add(1),
+    }),
   },
   //#endregion
   //#region Roots
@@ -2597,10 +3052,25 @@ export const Upgrades: Record<string, {
   },
   "RO\\M8": {
     get description() { return `Cells can now exceed their limit, so Bacteria Types are automatically gained.` },
-    branch: ["RO\\M6"],
+    branch: ["RO\\M7"],
 
     nospend: true,
     cost: ['total-roots', 500],
+  },
+  "RO\\M9": {
+    get description() { return `Coal doesn't reset on Reinforcement.` },
+    branch: ["RO\\M8"],
+
+    nospend: true,
+    cost: ['total-roots', 1e7],
+  },
+  "RO\\M10": {
+    permanent: true,
+    get description() { return `Passively generate <b>100%</b> of your pending Entropy permanently.` },
+    branch: ["RO\\M9"],
+
+    nospend: true,
+    cost: ['total-roots', 1e9],
   },
 
   "RO\\2": {
@@ -2994,6 +3464,562 @@ export const Upgrades: Record<string, {
 
     cost: ['roots', 150000],
   },
+  "RO\\36": {
+    get description() { return `Superscaled Fertilizers are delayed by <b>FR1</b>'s level.` },
+    branch: ["RO\\29"],
+
+    cost: ['roots', 2.5e6],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.mul(player.repeatable_upgrades["FR\\1"][0], 2),
+    }),
+  },
+  "RO\\37": {
+    get description() { return `Cells weaken Bacteria's limit slowdown.` },
+    branch: ["RO\\30"],
+
+    cost: ['roots', 5e6],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.max(player.cell.amount, 10).log10().log10().div(50).add(1).root(-2),
+    }),
+  },
+  "RO\\38": {
+    get description() { return `Incinerator's maximum input is increased by total Roots.` },
+    branch: ["RO\\29"],
+
+    cost: ['roots', 8e6],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.div(player.root.total, 100).add(1).log(100).add(1),
+    }),
+  },
+  "RO\\39": {
+    get description() { return `Total Roots boost Ash.` },
+    branch: ["RO\\37"],
+
+    cost: ['roots', 2e7],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'ash',
+      calc: () => Decimal.add(player.root.total, 1).root(2),
+    }),
+  },
+  "RO\\40": {
+    get description() { return `You can incinerate Leaves.` },
+    branch: ["RO\\29"],
+
+    cost: ['roots', 5e7],
+  },
+  "RO\\41": {
+    get description() { return `Incinerator's debuffs are weaker.` },
+    branch: ["RO\\39"],
+
+    cost: ['roots', 1e8],
+  },
+  "RO\\42": {
+    get description() { return `Coal's Root effect is <b>twice</b> stronger.` },
+    branch: ["RO\\35"],
+
+    cost: ['roots', 1e9],
+  },
+  "RO\\43": {
+    get description() { return `<b>${formatMult(2)}</b> to Leaves falling speed.` },
+    branch: ["RO\\42"],
+
+    cost: ['roots', 2e9],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'fallen-speed',
+      calc: () => 2,
+    }),
+  },
+  "RO\\44": {
+    get description() { return `<b>${formatMult(2)}</b> to Leaves falling speed.` },
+    branch: ["RO\\42"],
+
+    cost: ['roots', 5e9],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'fallen-speed',
+      calc: () => 2,
+    }),
+  },
+  "RO\\45": {
+    get description() { return `<b>${formatMult(2)}</b> to Basket cap.` },
+    branch: ["RO\\44"],
+
+    cost: ['roots', 8e9],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'fallen-basket',
+      calc: () => 2,
+    }),
+  },
+  "RO\\46": {
+    get description() { return `<b>${formatMult(2)}</b> to Basket cap.` },
+    branch: ["RO\\45"],
+
+    cost: ['roots', 1.5e10],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'fallen-basket',
+      calc: () => 2,
+    }),
+  },
+  "RO\\47": {
+    get description() { return `Leaves boost Leaves falling speed.` },
+    branch: ["RO\\43"],
+
+    cost: ['roots', 1.5e11],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'fallen-speed',
+      calc: () => Decimal.add(player.leaves, 1).log10().div(2000).add(1),
+    }),
+  },
+  "RO\\48": {
+    get description() { return `<b>${formatMult(2)}</b> to Basket cap.` },
+    branch: ["RO\\46"],
+
+    cost: ['roots', 1e17],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'fallen-basket',
+      calc: () => 2,
+    }),
+  },
+  "RO\\49": {
+    get description() { return `Fall challenge's best score boosts Fallen Leaves.` },
+    branch: ["RO\\47"],
+
+    cost: ['roots', 2e18],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'fallen-0',
+      calc: () => Decimal.add(player.season.best[0][0], 1).log10().div(1e3).add(1),
+    }),
+  },
+  "RO\\50": {
+    get description() { return `Summer challenge's best score boosts Coal's 1st effect and Charcoal's effects.` },
+    branch: ["RO\\49"],
+
+    cost: ['roots', 5e19],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      calc: () => Decimal.add(player.season.best[1][0], 100).log(100).log(20).add(1),
+    }),
+  },
+  "RO\\51": {
+    get description() { return `<b>${formatMult(2)}</b> to Sacred Leaves.` },
+    branch: ["RO\\50"],
+
+    cost: ['roots', 1e21],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'sacred',
+      calc: () => 2,
+    }),
+  },
+  "RO\\52": {
+    get description() { return `<b>RO50</b> affects <b>FA2</b>'s effect.` },
+    branch: ["RO\\50"],
+
+    cost: ['roots', 1e22],
+  },
+  "RO\\53": {
+    permanent: true,
+    get description() { return `Unlock a new repeatable Root upgrade permanently.` },
+    branch: ["RO\\35"],
+
+    cost: ['roots', 5e24],
+  },
+  "RO\\54": {
+    get description() { return `Improve Sacred Leaves gain.` },
+    branch: ["RO\\51"],
+
+    cost: ['roots', 1e27],
+  },
+  "RO\\55": {
+    get description() { return `<b>${formatMult(2)}</b> to Sacred Leaves and Roots, <b>${formatPow(2)}</b> to Virus.` },
+    branch: ["RO\\54"],
+
+    cost: ['roots', 1e33],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['roots','sacred'],
+      calc: () => 2,
+    }),
+  },
+  "RO\\56": {
+    get description() { return `Roots boost Virus.` },
+    branch: ["RO\\55"],
+
+    cost: ['roots', 1e36],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: 'virus',
+      calc: () => Decimal.div(player.root.amount, 1e33).add(1).log(1e3).add(1),
+    }),
+  },
+  "RO\\57": {
+    get description() { return `<b>${formatMult(3)}</b> to Fallen Leaves of all types.` },
+    branch: ["RO\\54"],
+
+    cost: ['roots', 2e37],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: ['fallen-0','fallen-1','fallen-2','fallen-3','fallen-4','fallen-5','fallen-6'],
+      calc: () => 3,
+    }),
+  },
+  "RO\\58": {
+    get description() { return `The 1st Virus upgrade gain a bonus level per the 2nd and 3rd Virus upgrades.` },
+    branch: ["RO\\56"],
+
+    cost: ['roots', 4e38],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => softcap(Decimal.add(player.big_upgrades['virus\\2'],player.big_upgrades['virus\\3']), 100, 1/3, "L"),
+    }),
+  },
+  //#endregion
+  //#region Ash
+  "A\\1": {
+    get description() { return `<b>${formatMult(3)}</b> to Heat.` },
+    branch: [],
+
+    cost: ['ash', 1e12],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'heat',
+      calc: () => 3,
+    }),
+  },
+  "A\\2": {
+    get description() { return `<b>${formatMult(10)}</b> to Ash.` },
+    branch: ["A\\1"],
+
+    cost: ['ash', 1e14],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'ash',
+      calc: () => 10,
+    }),
+  },
+  "A\\3": {
+    get description() { return `<b>${formatMult(5)}</b> to Heat.` },
+    branch: ["A\\2"],
+
+    cost: ['ash', 1e18],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: 'heat',
+      calc: () => 5,
+    }),
+  },
+  "A\\4": {
+    get description() { return `Ash boosts Heat.` },
+    branch: ["A\\3"],
+
+    cost: ['ash', 1e23],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: 'heat',
+      calc: () => Decimal.add(player.furnace.ash, 10).log10().pow(2),
+    }),
+  },
+  "A\\5": {
+    get description() { return `<b>${formatMult(.1)}</b> to Charcoal requirement.` },
+    branch: ["A\\4"],
+
+    cost: ['ash', 1e27],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      calc: () => .1,
+    }),
+  },
+  "A\\6": {
+    get description() { return `Entropy divides Coal requirement.` },
+    branch: ["A\\5"],
+
+    cost: ['ash', 1e30],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.entropy, 10).log10().pow(-2),
+    }),
+  },
+  "A\\7": {
+    get description() { return `Ash divides Coal requirement.` },
+    branch: ["A\\4"],
+
+    cost: ['ash', 1e33],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.furnace.ash, 10).log10().pow(-2),
+    }),
+  },
+  "A\\8": {
+    get description() { return `<b>${formatMult(2)}</b> to Fallen Leaves.` },
+    branch: ["A\\4"],
+
+    cost: ['ash', 1e40],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-0",
+      calc: () => 2,
+    }),
+  },
+  "A\\9": {
+    get description() { return `<b>${formatMult(2)}</b> to Bronze Leaves.` },
+    branch: ["A\\8"],
+
+    cost: ['ash', 1e45],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-1",
+      calc: () => 2,
+    }),
+  },
+  "A\\10": {
+    get description() { return `<b>${formatMult(2)}</b> to Silver Leaves.` },
+    branch: ["A\\9"],
+
+    cost: ['ash', 1e47],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-2",
+      calc: () => 2,
+    }),
+  },
+  "A\\11": {
+    get description() { return `<b>${formatMult(2)}</b> to Golden Leaves.` },
+    branch: ["A\\10"],
+
+    cost: ['ash', 1e100],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-3",
+      calc: () => 2,
+    }),
+  },
+  "A\\12": {
+    get description() { return `<b>${formatMult(1.5)}</b> to Sacred Leaves.` },
+    branch: ["A\\11"],
+
+    cost: ['ash', 1e121],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "sacred",
+      calc: () => 1.5,
+    }),
+  },
+  "A\\13": {
+    get description() { return `<b>${formatMult(2)}</b> to Platinum Leaves.` },
+    branch: ["A\\12"],
+
+    cost: ['ash', 1e243],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-4",
+      calc: () => 2,
+    }),
+  },
+  "A\\14": {
+    get description() { return `<b>${formatMult(6.66)}</b> to Sacred Leaves.` },
+    branch: ["A\\13"],
+
+    cost: ['ash', '6.666e666'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "sacred",
+      calc: () => 6.66,
+    }),
+  },
+  "A\\15": {
+    get description() { return `<b>${formatMult(3)}</b> to True Autumn Leaves.` },
+    branch: ["A\\14"],
+
+    cost: ['ash', 'e800'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-6",
+      calc: () => 3,
+    }),
+  },
+  //#endregion
+  //#region Fallen Leaves
+  "FA\\1": {
+    get description() { return `Tree age slowdown is <b>25%</b> weaker again.` },
+    branch: [],
+
+    cost: ['fallen-0', 1e24],
+  },
+  "FA\\2": {
+    get description() { return `Fallen Leaves are increased by <b>10%</b> compounding per Charcoal.` },
+    branch: ['FA\\1'],
+
+    cost: ['fallen-0', 1e27],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "fallen-0",
+      calc: () => Decimal.pow(1.1, player.furnace.charcoal).pow(hasUpgrade("RO\\52") ? Effect.effect("upg-RO\\50") : 1),
+    }),
+  },
+  "FA\\3": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Fallen Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\1'],
+
+    cost: ['fallen-0', 1e30],
+  },
+  "FA\\4": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Brozen Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\3'],
+
+    cost: ['fallen-0', 1e36],
+  },
+  "FA\\5": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Silver Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\4'],
+
+    cost: ['fallen-0', 1e50],
+  },
+  "FA\\6": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Golden Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\5'],
+
+    cost: ['fallen-0', 1e70],
+  },
+  "FA\\7": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Platinum Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\6'],
+
+    cost: ['fallen-0', 1e95],
+  },
+  "FA\\8": {
+    permanent: true,
+    get description() { return `Passively generate <b>1%</b> of your pending Roots permanently.` },
+    branch: ['FA\\6'],
+
+    cost: ['fallen-0', 1e100],
+  },
+  "FA\\9": {
+    permanent: true,
+    get description() { return `Sacred Leaf upgrades no longer take Sacred Leaves away permanently.` },
+    branch: ['FA\\8'],
+
+    cost: ['fallen-0', 1e105],
+  },
+  "FA\\10": {
+    get description() { return `<b>${formatMult(5)}</b> to Leaves falling speed.` },
+    branch: ['FA\\9'],
+
+    cost: ['fallen-0', 1e110],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-speed",
+      calc: () => 5,
+    }),
+  },
+  "FA\\11": {
+    get description() { return `<b>${formatMult(5)}</b> to Leaves falling speed.` },
+    branch: ['FA\\10'],
+
+    cost: ['fallen-0', 1e130],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-speed",
+      calc: () => 5,
+    }),
+  },
+  "FA\\12": {
+    get description() { return `<b>${formatMult(5)}</b> to Leaves falling speed.` },
+    branch: ['FA\\11'],
+
+    cost: ['fallen-0', 1e170],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "fallen-speed",
+      calc: () => 5,
+    }),
+  },
   //#endregion
 };
 
@@ -3023,7 +4049,7 @@ export function purchaseUpgrade(id: string, nospend = false) {
     && (empty_branch || (player.discovered_upgrades[id] ? U.branch.some(x => hasUpgrade(x)) : U.branch.every(x => player.discovered_upgrades[x]))))
   ) return;
 
-  const cost = U.cost[1], C = Currencies[U.cost[0] as Currency]
+  const cost = U.cost[1], C = Currencies[U.cost[0]]
 
   if (Decimal.lt(C.amount, cost)) return;
 
@@ -3277,6 +4303,15 @@ export function setupUpgrades() {
     type: EffectType.Multiplier,
     static: true,
     group: 'entropy',
+    calc: () => 2,
+  })
+
+  new Effect({
+    active: () => hasUpgrade("RO\\55"),
+    id: "upg-F\\55a",
+    type: EffectType.Exponent,
+    static: true,
+    group: 'virus',
     calc: () => 2,
   })
 }

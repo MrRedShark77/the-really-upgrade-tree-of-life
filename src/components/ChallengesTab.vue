@@ -22,7 +22,7 @@ import SeasonItem from './SeasonItem.vue';
       <hr class="sub-line" />
       <p>While in challenge, the Cell's effects are reduced by <b>^0.5</b>. Each completion gives <b>{{ formatMult(2,0) }}</b> Roots.</p>
       <div class="challenge-buttons">
-        <SeasonItem v-for="x in 1" :key="'s-'+x" :n="x-1" />
+        <SeasonItem v-for="x in 3" :key="'s-'+x" :n="x-1" />
       </div>
     </div>
   </div>

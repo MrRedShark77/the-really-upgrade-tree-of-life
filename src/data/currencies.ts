@@ -5,26 +5,12 @@ import { hasUpgrade } from "./upgrades";
 import { Effect, Effects, EffectType, TotalEffectGroups } from "@/utils/effect";
 import { Resets } from "./resets";
 import { advanced_softcap, softcap } from "@/utils/decimal";
-import { format, formatGain, formatMult, formatTime } from "@/utils/formats";
+import { format, formatGain, formatMult, formatPercent, formatTime } from "@/utils/formats";
 import { softcapped_text } from "@/utils/misc";
-import { Cell } from "./cell";
+import { Cell, Virus } from "./cell";
 import { Seasons } from "./challenges";
 
-export enum Currency {
-  Leaves = 'leaves',
-  TreeAge = 'age',
-  Seeds = 'seeds',
-  Fruits = 'fruits',
-  PotentialEnergy = "potential-energy",
-  Entropy = "entropy",
-  Bacteria = "bacteria",
-  Roots = "roots",
-  TotalRoots = "total-roots",
-  Heat = "heat",
-  Ash = "ash",
-}
-
-export const Currencies: Record<Currency, {
+export const Currencies: Record<string, {
   name: string;
   amount: DecimalSource;
   gain: DecimalSource;
@@ -53,7 +39,7 @@ export const Currencies: Record<Currency, {
 
       let x = Effect.calculateEffects("age", 1)
 
-      x = advanced_softcap(x, '4.351968e367', .5, hasUpgrade("E\\52") ? .9 : 1, "E")
+      x = advanced_softcap(x, '4.351968e367', .5, Decimal.mul(hasUpgrade("E\\52") ? .75 : 1, hasUpgrade("FA\\1") ? .75 : 1), "E")
 
       return x
     },
@@ -114,7 +100,7 @@ export const Currencies: Record<Currency, {
       return Decimal.max(x, 1).floor()
     },
 
-    passive: 0,
+    get passive() { return +hasUpgrade("RO\\M10") },
   },
   'bacteria': {
     name: "Bacteria",
@@ -122,7 +108,7 @@ export const Currencies: Record<Currency, {
     set amount(v) { player.bacteria.amount = Decimal.max(v, 0) },
 
     get gain() {
-      if (Decimal.lt(player.bacteria.types, 1) || !Resets.bacteria.reached) return 0;
+      if (Seasons.in(1) || Decimal.lt(player.bacteria.types, 1) || !Resets.bacteria.reached) return 0;
 
       const x = Effect.calculateEffects("bacteria", 1)
 
@@ -144,7 +130,7 @@ export const Currencies: Record<Currency, {
       return Decimal.max(x, 1).floor()
     },
 
-    passive: 0,
+    get passive() { return +hasUpgrade("FA\\8") * .01 },
   },
   'total-roots': {
     name: "total Roots",
@@ -180,6 +166,44 @@ export const Currencies: Record<Currency, {
       const x = Effect.calculateEffects("ash", 1)
 
       return Decimal.max(x, 1).floor()
+    },
+
+    passive: 1,
+  },
+  'sacred': {
+    name: "Sacred Leaves",
+    get amount() { return player.sacred },
+    set amount(v) { player.sacred = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!Resets.sacred.reached) return 0;
+
+      const x = Effect.calculateEffects("sacred", 1)
+
+      return Decimal.max(x, 1).floor()
+    },
+
+    get passive() { return +player.first.season[2] * 0.01 },
+  },
+  'virus': {
+    name: "Virus",
+    get amount() { return player.virus },
+    set amount(v) { player.virus = Decimal.max(v, 1) },
+
+    gain: 0,
+    passive: 0,
+  },
+  'BV': {
+    name: "Beneficial Virus",
+    get amount() { return player.beneficial_virus },
+    set amount(v) { player.beneficial_virus = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!player.first.beneficial_virus) return 0;
+
+      const x = Effect.calculateEffects("BV", 1)
+
+      return Decimal.max(x, 0)
     },
 
     passive: 1,
@@ -238,6 +262,26 @@ export function setupCurrencies() {
     static: false,
     type: EffectType.Base,
     calc: () => player.furnace.heat
+  })
+  new Effect({
+    id: "sacred",
+    group: "sacred",
+    static: false,
+    type: EffectType.Base,
+    calc: () =>
+      softcap(
+        softcap(
+          Decimal.div(player.fallen[0], 1e25).add(1).root(10).mul(Decimal.add(player.leaves, 1).log10().div(2.5e3).pow(hasUpgrade("RO\\54") ? 2 : 1)),
+        100, .5, "P"),
+      1e7, .5, "E"
+    ),
+  })
+  new Effect({
+    id: "BV",
+    group: "BV",
+    static: false,
+    type: EffectType.Base,
+    calc: () => Decimal.max(player.virus, 1).log10().div(1e5).root(2).mul(Effect.effect("bupg-virus\\4")).div(100)
   })
 }
 
@@ -346,7 +390,7 @@ export const Currency_Stats: Record<string, {
     color: '#9ae8a5',
     get html() {
       const C = Currencies.bacteria
-      return `<b>Bactreria</b>: ${format(C.amount,0)}<br>${Decimal.neq(C.passive, 0) ? formatGain(C.amount, temp.currencies.bacteria) : `(+${format(temp.currencies.bacteria, 0)})`}`
+      return `<b>Bacteria</b>: ${format(C.amount,0)}<br>${Decimal.neq(C.passive, 0) ? formatGain(C.amount, temp.currencies.bacteria) : `(+${format(temp.currencies.bacteria, 0)})`}`
     },
     hover: () => `<h3>Bacteria</h3>
     <hr class='sub-line white-line' />
@@ -359,10 +403,88 @@ export const Currency_Stats: Record<string, {
     color: '#dddf24',
     get html() {
       const C = Currencies.roots
-      return `<b>Roots</b>: ${format(C.amount,0)}<br>${Decimal.neq(C.passive, 0) ? formatGain(C.amount, temp.currencies.roots) : `(+${format(temp.currencies.roots, 0)})`}`
+      return `<b>Roots</b>: ${format(C.amount,0)}<br>${Decimal.neq(C.passive, 0) ? formatGain(C.amount, Decimal.mul(temp.currencies.roots, C.passive)) : `(+${format(temp.currencies.roots, 0)})`}`
     },
     hover: () => `<h3>Roots</h3>
     <hr class='sub-line white-line' />
     ${Effect.calculateEffectHTML("roots",true,`(log<sub>10</sub><b>Leaves</b> / ${format(1500)})<sup>${format(Effects['roots'].variables.exp,3)}</sup>`)} = <b>${format(temp.currencies.roots)}</b>`,
+  },
+  "heat": {
+    default: false,
+    name: "Heat",
+    condition: () => hasUpgrade("RO\\35"),
+    color: '#ff4400',
+    get html() {
+      const C = Currencies.heat
+      return `<b>Heat</b>: ${format(C.amount,0)}<br>${formatGain(C.amount, Decimal.mul(temp.currencies.heat, C.passive))}`
+    },
+    hover: () => `<h3>Heat</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("heat",true,`<b>FI</b><sup>2</sup> × <b>SI</b><sup>2</sup> × max(<b>LI</b> / 10, 1)<sup>2</sup> / ${format(1e3)}`)} = <b>${format(temp.currencies.heat)}</b>`,
+  },
+  "ash": {
+    default: false,
+    name: "Ash",
+    condition: () => hasUpgrade("RO\\35"),
+    color: '#888',
+    get html() {
+      const C = Currencies.ash
+      return `<b>Ash</b>: ${format(C.amount,0)}<br>${formatGain(C.amount, Decimal.mul(temp.currencies.ash, C.passive))}`
+    },
+    hover: () => `<h3>Ash</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("ash",true,`<b>Heat</b>`)} = <b>${format(temp.currencies.ash)}</b>`,
+  },
+  "fallen": {
+    default: false,
+    name: "Fallen Leaves",
+    condition: () => player.first.season[1],
+    color: '#ff8c00',
+    get html() {
+      const C = Currencies['fallen-0']
+      return `<b>Fallen Leaves</b>: ${format(C.amount,0)}<br>${formatGain(C.amount, Decimal.mul(temp.currencies['fallen-0'], C.passive))}`
+    },
+    hover: () => `<h3>Fallen Leaves</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("fallen-0")} × ${format(Decimal.mul(temp.basket_cap, FPS).min(temp.fallen_speed))} = <b>${format(temp.currencies['fallen-0'])}</b>`,
+  },
+  "sacred": {
+    default: false,
+    name: "Sacred Leaves",
+    condition: () => player.first.fallen[3],
+    color: '#ff006f',
+    get html() {
+      const C = Currencies.sacred
+      return `<b>Sacred Leaves</b>: ${format(C.amount,0)}<br>${formatGain(C.amount, Decimal.mul(temp.currencies.sacred, C.passive))}`
+    },
+    hover: () => `<h3>Sacred Leaves</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("sacred",true,`(<b>Fallen Leaves</b> / ${format(1e25)})<sup>0.1</sup> × (log<sub>10</sub><b>Leaves</b> / ${format(2500)})${hasUpgrade("RO\\54") ? '<sup>2</sup>' : ''}`, softcapped_text(Decimal.gte(TotalEffectGroups.sacred[EffectType.Base], 100)))} = <b>${format(temp.currencies.sacred)}</b>`,
+  },
+  "virus": {
+    default: false,
+    name: "Virus",
+    condition: () => player.first.virus,
+    color: '#ff6478',
+    get html() {
+      const C = Currencies.virus
+      return `<b>Virus</b>: ${format(C.amount,0)}<br>(${formatMult(Virus.calc(1/FPS).div(player.virus).pow(FPS),3)}/s)`
+    },
+    hover: () => `<h3>Virus Multiplier</h3>
+    <hr class='sub-line white-line' />
+    1.1<sup>${format(TotalEffectGroups.virus[EffectType.Exponent])}</sup> = <b>${formatMult(temp.virus_mult)}</b>`,
+  },
+  "BV": {
+    default: false,
+    name: "Beneficial Virus",
+    condition: () => player.first.beneficial_virus,
+    color: '#64ff95',
+    get html() {
+      const C = Currencies.BV
+      return `<b>Beneficial Virus</b>: ${format(C.amount,0)}<br>${formatGain(C.amount, Decimal.mul(temp.currencies.BV, C.passive))}`
+    },
+    hover: () => `<h3>Beneficial Virus</h3>
+    <hr class='sub-line white-line' />
+    ${Effect.calculateEffectHTML("BV",true,`(log<sub>10</sub><b>Virus</b> / ${format(1e5)})<sup>0.5</sup> × ${formatPercent(Decimal.div(Effects['bupg-virus\\4'].temp, 100))}`)} = <b>${format(temp.currencies.BV)}</b>`,
   },
 }

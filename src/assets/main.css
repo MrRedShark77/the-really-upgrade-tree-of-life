@@ -132,18 +132,38 @@ button * {
   --button-color: white;
 
   font-size: 12px;
-  border: solid 2px color-mix(in srgb, var(--button-color) 25%, black);
+  border: solid 2px black;
+  isolation: isolate;
+  background: transparent;
   border-radius: 5px;
-  background: var(--button-color);
   padding: 4px 8px;
   color: black;
 
   cursor: pointer;
 }
 
-.o-primary-btn:not(.o-primary-btn--disabled,.no-active,:active):hover,
+.o-primary-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--button-color);
+  border-radius: 3px;
+  z-index: -1;
+}
+
+.o-primary-btn:not(.o-primary-btn--disabled,.no-active,:active):hover::before,
+.o-primary-btn.o-primary-btn--bought::before {
+  filter: brightness(1.1);
+  /* background: color-mix(in srgb, var(--button-color) 90%, white); */
+}
+
+.o-primary-btn.o-primary-btn--disabled::before {
+  filter: brightness(0.8);
+}
+
+.o-primary-btn.o-primary-btn--disabled,
 .o-primary-btn.o-primary-btn--bought {
-  background: color-mix(in srgb, var(--button-color) 90%, white);
+  cursor: default;
 }
 
 /*
@@ -176,17 +196,6 @@ button * {
   background-color: color-mix(in srgb, var(--button-color) 4%, transparent);
 }
 */
-
-.o-primary-btn.o-primary-btn--disabled {
-  background: color-mix(in srgb, var(--button-color) 90%, black);
-
-  cursor: default;
-}
-.o-primary-btn.o-primary-btn--bought {
-  background: color-mix(in srgb, var(--button-color) 90%, white);
-
-  cursor: default;
-}
 
 button * {
   user-select: none;
@@ -251,16 +260,53 @@ button * {
 .upgrade-F {
   --button-color: #d02013;
 }
-.upgrade-E {
+.upgrade-E,
+.upgrade-cell {
   --button-color: #b1c4eb;
 }
 .upgrade-RO {
   --button-color: #dddf24;
 }
-
-.bacteria-button {
+.upgrade-A {
+  --button-color: #666;
+}
+.upgrade-bacteria {
   --button-color: #9ae8a5;
 }
+.upgrade-virus {
+  --button-color: #ff8080;
+}
+.upgrade-BV {
+  --button-color: #93ff80;
+}
+
+.upgrade-fallen-0,
+.upgrade-FA {
+  --button-color: linear-gradient(135deg, #fe0, #f40);
+}
+.upgrade-fallen-1 {
+  --button-color: linear-gradient(135deg, #CD7F32, #f3455a);
+}
+.upgrade-fallen-2 {
+  --button-color: linear-gradient(135deg, #c4c4c4, #888);
+}
+.upgrade-fallen-3 {
+  --button-color: linear-gradient(135deg, gold, #b80);
+}
+.upgrade-fallen-4 {
+  --button-color: linear-gradient(135deg, #eef, #c4c4ff);
+}
+.upgrade-fallen-5 {
+  --button-color: linear-gradient(135deg, lightcyan, cyan);
+}
+.upgrade-fallen-6 {
+  --button-color: linear-gradient(135deg, #fe0, #f40, #ff0055);
+}
+
+.upgrade-sacred {
+  --button-color: radial-gradient(#ff7686, #cf0018);
+}
+
 .compost-button {
   --button-color: #5f2f00;
   color: white;
@@ -403,6 +449,12 @@ button * {
 .challenges-table {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
+  justify-content: center;
+}
+
+.fallen-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
   justify-content: center;
 }
 

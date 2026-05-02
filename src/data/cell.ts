@@ -6,6 +6,7 @@ import Decimal from "break_eternity.js"
 import { hasUpgrade } from "./upgrades"
 import { Bacteria } from "./bacteria"
 import { Auto, AutoKeys } from "./automation"
+import { Seasons } from "./challenges"
 
 export const Cell = {
   get power() {
@@ -28,6 +29,8 @@ export const Cell = {
   },
 
   calc(dt: DecimalSource, amount: DecimalSource = player.cell.amount) {
+    if (Seasons.in(1)) return DC.D1;
+
     amount = Decimal.max(amount, 1).log10()
 
     const S = temp.cell_overflow
@@ -76,7 +79,7 @@ export const Cell = {
   },
 
   cellular_power: {
-    get requirement() { return Decimal.add(scale(scale(player.auto.total, 400, 2, "P"), 100, 2, "L"), 1).pow_base(1e12) },
+    get requirement() { return Decimal.add(scale(scale(scale(player.auto.total, 1000, 2, "ME2"), 400, 2, "P"), 100, 2, "L"), 1).pow_base(1e12) },
 
     get amount() {
       let x = D(player.auto.total)
@@ -85,5 +88,46 @@ export const Cell = {
 
       return x.max(0)
     },
+  },
+}
+
+export const Virus = {
+  get speed() {
+    let x: DecimalSource = 1.1
+
+    x = Effect.calculateEffects('virus', x)
+
+    return x
+  },
+
+  calc(dt: DecimalSource, amount: DecimalSource = player.virus) {
+    return Decimal.pow(temp.virus_mult, dt).mul(amount)
+  },
+
+  setup() {
+    new Effect({
+      active: () => player.season.active === 2,
+      type: EffectType.Exponent,
+      static: false,
+      id: "virus-nerf",
+      group: ['leaves', 'seeds', 'fruits'],
+      calc: () => Decimal.mul(0.002, Effect.effect('bupg-virus\\2')).div(Decimal.max(player.virus, 1).log10().div(10).add(1).root(2).pow(Effect.effect('bupg-virus\\3'))).min(1),
+    })
+
+    new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      id: "virus-boost-1",
+      group: 'virus',
+      calc: () => Decimal.add(player.leaves, 1).log10().div(100).add(1),
+    })
+
+    new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      id: "virus-boost-2",
+      group: 'virus',
+      calc: () => Decimal.add(player.bacteria.amount, 1).log10().div(100000).add(1),
+    })
   },
 }

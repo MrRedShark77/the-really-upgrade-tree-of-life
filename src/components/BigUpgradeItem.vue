@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PrimaryButton from './PrimaryButton.vue';
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import { format } from '@/utils/formats';
 import { player } from '@/main';
 import { computed } from 'vue';
@@ -9,7 +9,7 @@ import { BigUpgrades, purchaseBigUpgrade } from '@/data/big_upgrades';
 
 const { n } = defineProps<{ n: string }>()
 
-const U = BigUpgrades[n], C = Currencies[U.cost[0] as Currency], E = U.preEffect
+const U = BigUpgrades[n], C = Currencies[U.cost[0]], E = U.preEffect
 
 const bonus = computed(() => U.bonus ?? 0)
 const cost = computed(() => U.cost[1](player.big_upgrades[n]))

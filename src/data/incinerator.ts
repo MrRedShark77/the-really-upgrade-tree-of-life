@@ -4,33 +4,41 @@ import { Effect, EffectType } from "@/utils/effect";
 import type { DecimalSource } from "break_eternity.js";
 import Decimal from "break_eternity.js";
 import { hasUpgrade } from "./upgrades";
+import { Seasons } from "./challenges";
 
 export const Incinerator = {
   levels: [
-    [() => true, x => Decimal.pow(x, 1.25).mul(-8).pow10(), 'fruits'],
-    [() => hasUpgrade("RO\\29"), x => Decimal.pow(x, 1.25).mul(-20).pow10(), 'seeds'],
-    [() => false, x => Decimal.pow(x, 1.25).mul(-35).pow10(), 'leaves'],
+    [() => true, x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-8).pow10(), 'fruits'],
+    [() => hasUpgrade("RO\\29"), x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-20).pow10(), 'seeds'],
+    [() => hasUpgrade("RO\\40"), x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-35).pow10(), 'leaves'],
   ] as [
     () => boolean,
     (x: DecimalSource) => DecimalSource,
     string,
   ][],
 
-  get limit() { return Decimal.add(5, Effect.effect("upg-RO\\28")) },
+  get limit() {
+    const x = Decimal.add(5, Effect.effect("upg-RO\\28")).add(Effect.effect("upg-RO\\38"))
+
+    return x.round()
+  },
 
   total_level(current = false) {
+    if (current && Seasons.in(2)) return 0
+
     let x = DC.D0
     for (let i = 0; i < this.levels.length; i++) x = x.add(player.incinerator[i][+current]);
     return x
   },
 
-  entropy_boost: (lvl: DecimalSource) => Decimal.pow(10, lvl),
+  entropy_boost: (lvl: DecimalSource) => Decimal.pow(10, lvl).pow(Effect.effect("bupg-fallen-3\\2")),
 
   setup() {
     for (let i = 0; i < this.levels.length; i++) {
       const L = this.levels[i]
 
       new Effect({
+        active: () => !Seasons.in(2),
         id: "inc-nerf-"+i,
         type: EffectType.Multiplier,
         static: false,

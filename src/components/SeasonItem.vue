@@ -18,7 +18,7 @@ const style = computed(() => {
 </script>
 
 <template>
-  <PrimaryButton v-if="n === 0 || player.first.season[n-1]" @click="Seasons.enter(n)" :style>
+  <PrimaryButton v-if="W.unl()" @click="Seasons.enter(n)" :style>
     <h4>{{ W.name }}</h4>
     <hr class="sub-line" />
     <div v-html="W.nerf[1](W.nerf[0](player.season.best[n][1]))"></div>

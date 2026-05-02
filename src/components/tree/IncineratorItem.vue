@@ -3,14 +3,14 @@ import { Incinerator } from '@/data/incinerator';
 import PrimaryButton from '../PrimaryButton.vue';
 import { format, formatMult } from '@/utils/formats';
 import { player } from '@/main';
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import { Effects } from '@/utils/effect';
 import type { DecimalSource } from 'break_eternity.js';
 import Decimal from 'break_eternity.js';
 
 const { n } = defineProps<{ n: number }>()
 
-const I = Incinerator.levels[n], C = Currencies[I[2] as Currency]
+const I = Incinerator.levels[n], C = Currencies[I[2]]
 
 function changeLevel(inc: DecimalSource) { player.incinerator[n][0] = Decimal.add(player.incinerator[n][0], inc).clamp(0,Incinerator.limit) }
 </script>

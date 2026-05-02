@@ -1,7 +1,7 @@
 import { player, temp } from "@/main"
 import Decimal, { type DecimalSource } from "break_eternity.js"
 import { getBigUpgradeEffect } from "./big_upgrades"
-import { DC, scale, softcap } from "@/utils/decimal"
+import { advanced_softcap, DC, scale, softcap } from "@/utils/decimal"
 import { Effect, EffectType } from "@/utils/effect"
 import { hasUpgrade } from "./upgrades"
 
@@ -21,7 +21,7 @@ export const Bacteria = {
   },
 
   get limit() {
-    return softcap(Effect.calculateEffects('bacteria-limit'), 'e10000', .5, "E")
+    return softcap(advanced_softcap(Effect.calculateEffects('bacteria-limit'), 'e10000', .5, Effect.effect("upg-RO\\37"), "E"), 'ee6', .5, "E")
   },
 
   get speed(): DecimalSource {

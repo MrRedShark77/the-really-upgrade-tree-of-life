@@ -3,10 +3,10 @@ import type { DecimalSource } from "break_eternity.js"
 import { hasUpgrade } from "./upgrades"
 import Decimal from "break_eternity.js"
 import { simpleCost } from "@/utils/decimal"
-import { formatMult } from "@/utils/formats"
+import { formatMult, formatPlus, formatPow } from "@/utils/formats"
 import { splitIntoGroups } from "@/utils/misc"
 import { player } from "@/main"
-import { Currencies, Currency } from "./currencies"
+import { Currencies } from "./currencies"
 
 const CS1 = () => hasUpgrade("RO\\11") ? .1 : 1;
 
@@ -28,16 +28,16 @@ export const RepeatableUpgrades: Record<string, {
   "LR\\1": {
     condition: () => hasUpgrade("L\\46"),
 
-    get max() { return Decimal.add(10, Effect.effect("upg-E\\30")).add(Effect.effect("upg-E\\35")).add(Effect.effect("upg-RO\\2")).add(Effect.effect("upg-RO\\10")) },
+    get max() { return Decimal.add(10, Effect.effect("upg-E\\30")).add(Effect.effect("upg-E\\35")).add(Effect.effect("upg-RO\\2")).add(Effect.effect("upg-RO\\10")).add(Effect.effect("rupg-SR\\3")) },
 
     get description() { return `<b>${formatMult(this.effect.base)}</b> to Seeds and Fruits.` },
 
     cost: [
       'leaves',
-      x => simpleCost(x, "ES", hasUpgrade("RO\\2") ? 1 : 'e500', ...(hasUpgrade("E\\34") ? [1e4 * CS1(), 10**.5] : [1e5 * CS1(), 10**.625])).mul(Effect.effect("upg-E\\43")),
-      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\43")), "ESI", hasUpgrade("RO\\2") ? 1 : 'e500', ...(hasUpgrade("E\\34") ? [1e4 * CS1(), 10**.5] : [1e5 * CS1(), 10**.625])).floor().add(1)],
+      x => simpleCost(x, "ES", hasUpgrade("RO\\2") ? 1 : 'e500', ...(hasUpgrade("E\\34") ? [1e4 * CS1(), 10**.5] : [1e5 * CS1(), 10**.625])).mul(Effect.effect("upg-E\\43")).mul(Effect.effect("rupg-SR\\2")),
+      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\43")).div(Effect.effect("rupg-SR\\2")), "ESI", hasUpgrade("RO\\2") ? 1 : 'e500', ...(hasUpgrade("E\\34") ? [1e4 * CS1(), 10**.5] : [1e5 * CS1(), 10**.625])).floor().add(1)],
     effect: {
-      get base() { return Decimal.add(2, Effect.effect("upg-E\\32")) },
+      get base() { return Decimal.add(2, Effect.effect("upg-E\\32")).pow(Effect.effect("upg-E\\63")) },
       calc(x) { return Decimal.pow(this.base, x) },
     },
     preEffect: new Effect({
@@ -50,13 +50,17 @@ export const RepeatableUpgrades: Record<string, {
   "LR\\2": {
     condition: () => Decimal.gte(player.repeatable_upgrades['LR\\1'][1], 100),
 
-    get max() { return 15 },
+    get max() { return Decimal.add(15, Effect.effect("upg-S\\47")).add(Effect.effect("upg-E\\59")).add(Effect.effect("rupg-SR\\3")) },
 
     get description() { return `<b>${formatMult(this.effect.base)}</b> to Entropy.` },
 
-    cost: ['leaves', x => simpleCost(x, "ES", 'e3500', 1e50, 10**6.25), x => simpleCost(x, "ESI", 'e3500', 1e50, 10**6.25).floor().add(1)],
+    cost: [
+      'leaves',
+      x => simpleCost(x, "ES", 'e3500', 1e50, 10**6.25).mul(Effect.effect("rupg-SR\\2")),
+      x => simpleCost(Decimal.div(x, Effect.effect("rupg-SR\\2")), "ESI", 'e3500', 1e50, 10**6.25).floor().add(1)
+    ],
     effect: {
-      base: 2,
+      get base() { return Decimal.pow(2, Effect.effect("upg-E\\66")) },
       calc(x) { return Decimal.pow(this.base, x) },
     },
     preEffect: new Effect({
@@ -66,21 +70,44 @@ export const RepeatableUpgrades: Record<string, {
       display: x => formatMult(x),
     }),
   },
+  "LR\\3": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['LR\\2'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>+${formatPow(this.effect.base)}</b> to Potential Energy.` },
+
+    cost: [
+      'leaves',
+      x => simpleCost(x, "ES", 'e60000', 'e1000', 1e125),
+      x => simpleCost(x, "ESI", 'e60000', 'e1000', 1e125).floor().add(1)
+    ],
+    effect: {
+      base: .01,
+      calc(x) { return Decimal.mul(this.base, x).add(1) },
+    },
+    preEffect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: 'PE',
+      display: x => formatPow(x),
+    }),
+  },
 
   "SR\\1": {
     condition: () => hasUpgrade("S\\44"),
 
-    get max() { return Decimal.add(10, Effect.effect("upg-E\\39")).mul(Effect.effect("upg-RO\\4")) },
+    get max() { return Decimal.add(10, Effect.effect("upg-E\\39")).add(Effect.effect("rupg-SR\\3")).mul(Effect.effect("upg-RO\\4")).mul(Effect.effect("upg-E\\62")) },
 
     get description() { return `<b>${formatMult(this.effect.base)}</b> to Leaves and Tree aging speed.` },
 
     cost: [
       'seeds',
-      x => simpleCost(x, "ES", hasUpgrade("RO\\4") ? 1 : 'e650', 1e6 * CS1(), 10**.75).mul(Effect.effect("upg-E\\45")),
-      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\45")), "ESI", hasUpgrade("RO\\4") ? 1 : 'e650', 1e6 * CS1(), 10**.75).floor().add(1)
+      x => simpleCost(x, "ES", hasUpgrade("RO\\4") ? 1 : 'e650', 1e6 * CS1(), 10**.75).mul(Effect.effect("upg-E\\45")).mul(Effect.effect("rupg-SR\\2")).mul(Effect.effect("rupg-SR\\2")),
+      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\45")).div(Effect.effect("rupg-SR\\2")), "ESI", hasUpgrade("RO\\4") ? 1 : 'e650', 1e6 * CS1(), 10**.75).floor().add(1)
     ],
     effect: {
-      get base() { return Decimal.add(8, Effect.effect("upg-E\\41")) },
+      get base() { return Decimal.add(8, Effect.effect("upg-E\\41")).pow(Effect.effect("upg-E\\63")) },
       calc(x) { return Decimal.pow(this.base, x) },
     },
     preEffect: new Effect({
@@ -90,27 +117,156 @@ export const RepeatableUpgrades: Record<string, {
       display: x => formatMult(x),
     }),
   },
+  "SR\\2": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['SR\\1'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("upg-E\\59")).add(Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>${formatMult(this.effect.base)}</b> to <b>LR1-2</b>, <b>SR2</b>, and <b>FR1-2</b>' cost.` },
+
+    cost: [
+      'seeds',
+      x => simpleCost(x, "ES", 'e6000', 1e75, 10**9.375).mul(Effect.effect("upg-E\\61")),
+      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\61")), "ESI", 'e6000', 1e75, 10**9.375).floor().add(1)
+    ],
+    effect: {
+      base: 1e200,
+      calc(x) { return Decimal.neg(x).pow_base(this.base) },
+    },
+    preEffect: new Effect({
+      type: EffectType.BaseMultiplier,
+      static: false,
+      display: x => formatMult(x),
+    }),
+  },
+  "SR\\3": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['SR\\2'][1], 100),
+
+    get max() { return 50 },
+
+    get description() { return `<b>${formatPlus(this.effect.base)}</b> to <b>LSFER</b> repeatable upgrades' level cap, except itself.` },
+
+    cost: [
+      'seeds',
+      x => simpleCost(x, "ES", 'e90000', 'e1000', 1e100),
+      x => simpleCost(x, "ESI", 'e90000', 'e1000', 1e100).floor().add(1)
+    ],
+    effect: {
+      base: 1,
+      calc(x) { return Decimal.mul(x, 1) },
+    },
+    preEffect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      display: x => formatPlus(x),
+    }),
+  },
 
   "FR\\1": {
     condition: () => hasUpgrade("F\\45"),
 
-    get max() { return Decimal.add(10, Effect.effect("upg-E\\44")).add(Effect.effect("upg-E\\47")) },
+    get max() { return Decimal.add(10, Effect.effect("upg-E\\44")).add(Effect.effect("upg-E\\47")).add(Effect.effect("upg-E\\56")).add(Effect.effect("rupg-SR\\3")) },
 
     get description() { return `<b>${formatMult(this.effect.base)}</b> to Leaves, Seeds, and Fruits.` },
 
     cost: [
       'fruits',
-      x => simpleCost(x, "ES", 'e750', 1e10 * CS1(), 10).mul(Effect.effect("upg-E\\46")),
-      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\46")), "ESI", 'e750', 1e10 * CS1(), 10).floor().add(1)
+      x => simpleCost(x, "ES", 'e750', 1e10 * CS1(), 10).mul(Effect.effect("upg-E\\46")).mul(Effect.effect("rupg-SR\\2")),
+      x => simpleCost(Decimal.div(x, Effect.effect("upg-E\\46")).div(Effect.effect("rupg-SR\\2")), "ESI", 'e750', 1e10 * CS1(), 10).floor().add(1)
     ],
     effect: {
-      get base() { return Decimal.pow(10, Effect.effect("upg-E\\51")) },
+      get base() { return Decimal.pow(10, Effect.effect("upg-E\\51")).pow(Effect.effect("upg-E\\63")) },
       calc(x) { return Decimal.pow(this.base, x) },
     },
     preEffect: new Effect({
       type: EffectType.BaseMultiplier,
       static: true,
       group: ['leaves','seeds','fruits'],
+      display: x => formatMult(x),
+    }),
+  },
+  "FR\\2": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['FR\\1'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("rupg-SR\\3")).mul(Effect.effect("upg-E\\64")) },
+
+    get description() { return `<b>${formatMult(Decimal.pow(this.effect.base, -1))}</b> to the first 3 Fertilizers' cost.` },
+
+    cost: [
+      'fruits',
+      x => simpleCost(x, "ES", 'e10000', 1e100, 1e10).mul(Effect.effect("rupg-SR\\2")),
+      x => simpleCost(Decimal.div(x, Effect.effect("rupg-SR\\2")), "ESI", 'e10000', 1e100, 1e10).floor().add(1)
+    ],
+    effect: {
+      get base() { return Decimal.pow(1e200, Effect.effect("upg-L\\-19")) },
+      calc(x) { return Decimal.neg(x).pow_base(this.base) },
+    },
+    preEffect: new Effect({
+      type: EffectType.BaseMultiplier,
+      static: true,
+      display: x => formatMult(x),
+    }),
+  },
+
+  "ER\\1": {
+    condition: () => hasUpgrade("E\\53"),
+
+    get max() { return Decimal.add(25, Effect.effect("upg-E\\60")).add(Effect.effect("rupg-SR\\3")).mul(Effect.effect("upg-E\\62")) },
+
+    get description() { return `<b>${formatMult(this.effect.base)}</b> to Cell replication speed.` },
+
+    cost: ['entropy', x => simpleCost(x, "ES", 'e150', 10, 10**.125), x => simpleCost(x, "ESI", 'e150', 10, 10**.125).floor().add(1)],
+    effect: {
+      get base() { return Decimal.mul(1e3, Effect.effect("upg-E\\58")) },
+      calc(x) { return Decimal.pow(this.base, x) },
+    },
+    preEffect: new Effect({
+      type: EffectType.BaseMultiplier,
+      static: true,
+      group: ['cell-speed'],
+      display: x => formatMult(x),
+    }),
+  },
+  "ER\\2": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['ER\\1'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>+${formatPow(this.effect.base)}</b> to Bacteria's limit.` },
+
+    cost: ['entropy', x => simpleCost(x, "ES", 'e1500', 1e10, 10), x => simpleCost(x, "ESI", 'e1500', 1e10, 10).floor().add(1)],
+    effect: {
+      base: .05,
+      calc(x) { return Decimal.mul(this.base, x).add(1) },
+    },
+    preEffect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: ['bacteria-limit'],
+      display: x => formatPow(x),
+    }),
+  },
+
+  "ROR\\1": {
+    condition: () => hasUpgrade("RO\\53"),
+
+    get max() { return Decimal.add(100, Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>${formatMult(this.effect.base,3)}</b> to Fallen Leaves.` },
+
+    cost: [
+      'roots',
+      x => simpleCost(x, "ES", 1, 1.5, 1.05).pow(Effect.effect('upg-E\\65')).mul(1e23),
+      x => simpleCost(Decimal.div(x, 1e23).root(Effect.effect('upg-E\\65')), "ESI", 1, 1.5, 1.05).floor().add(1)
+    ],
+    effect: {
+      base: 1.075,
+      calc(x) { return Decimal.pow(this.base, x) },
+    },
+    preEffect: new Effect({
+      type: EffectType.BaseMultiplier,
+      static: true,
+      group: 'fallen-0',
       display: x => formatMult(x),
     }),
   },
@@ -145,6 +301,14 @@ export const RepeatableUpgradeStyle: Record<string, {
     name: "Repeatable Fruit Upgrades",
     color: "F"
   },
+  "ER": {
+    name: "Repeatable Entropy Upgrades",
+    color: "E"
+  },
+  "ROR": {
+    name: "Repeatable Root Upgrades",
+    color: "RO"
+  },
 }
 
 export function resetRepeatableUpgradesByGroup(id: string, keep: string[] = []) { for (const i of RepeatableUpgradeGroups[id]) if (!keep.includes(i)) player.repeatable_upgrades[i][0] = 0; }
@@ -158,7 +322,7 @@ export function purchaseRepeatableUpgrade(id: string, auto: boolean = false) {
 
   if (Decimal.gte(amount, limit)) return;
 
-  const C = Currencies[U.cost[0] as Currency]
+  const C = Currencies[U.cost[0]]
   let cost = U.cost[1](amount)
 
   if (Decimal.lt(C.amount, cost)) return;

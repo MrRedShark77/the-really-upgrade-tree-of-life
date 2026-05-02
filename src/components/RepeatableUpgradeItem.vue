@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PrimaryButton from './PrimaryButton.vue';
-import { Currencies, Currency } from '@/data/currencies';
+import { Currencies } from '@/data/currencies';
 import { format } from '@/utils/formats';
 import { player } from '@/main';
 import { computed } from 'vue';
@@ -10,7 +10,7 @@ import { replaceSpace } from '@/utils/misc';
 
 const { n } = defineProps<{ n: string }>()
 
-const U = RepeatableUpgrades[n], C = Currencies[U.cost[0] as Currency], E = U.preEffect
+const U = RepeatableUpgrades[n], C = Currencies[U.cost[0]], E = U.preEffect
 
 const level = computed(() => player.repeatable_upgrades[n][0])
 const max = computed(() => Decimal.round(U.max))

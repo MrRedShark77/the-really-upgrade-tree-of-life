@@ -38,7 +38,7 @@ export const Weathers = {
         x => `The exponent of Leaves, Seeds, and Fruits is reduced by <b>${formatMult(x,2,true,.1)}</b>.`
       ],
       reward: [
-        x => Decimal.add(player.bacteria.amount, 2.5).log(2.5).pow(3.7).pow(Decimal.div(x, 1e40).add(1).log(1e3).root(2).mul(.45).add(1)),
+        x => Decimal.add(player.bacteria.amount, 2.5).log(2.5).pow(3.7).pow(Decimal.div(x, 1e40).add(1).log(1e3).root(2).mul(.45).add(1)).root(Seasons.in(2) ? 2 : 1),
         x => `Unlock <b>Auto-Composting</b> permanently, and Bacteria boosts Leaves by <b>${formatMult(x)}</b>.`
       ],
 
@@ -53,7 +53,7 @@ export const Weathers = {
         x => `Superscaled Fertilizers always start at <b>6</b> and are <b>${formatPercent(Decimal.sub(x,1))}</b> stronger, and bonus Fertilizers are disabled.` + (hasUpgrade("RO\\2") ? ` Entropy Fertilizers don't count the score.` : "")
       ],
       reward: [
-        x => softcap(Decimal.add(player.entropy, 1).log(100).pow(.9).mul(.08).mul(Decimal.sub(x, 25).div(25).max(0).pow(.68)).add(1), 2, .5, "P"),
+        x => softcap(Decimal.add(player.entropy, 1).log(100).pow(.9).mul(.08).mul(Decimal.sub(x, 25).div(25).max(0).pow(.68)).add(1), 2, .5, "P").root(Seasons.in(2) ? 2 : 1),
         x => `Passively generate <b>100%</b> of your pending Seeds permanently, and Entropy boosts <b>L10</b>, <b>S8</b>, and <b>E4</b> by <b>${formatPow(x,3)}</b>.`
       ],
 
@@ -68,7 +68,7 @@ export const Weathers = {
         x => `Leaves and Tree aging speed are rooted by <b>${format(Decimal.pow(x,-1))}</b>.`
       ],
       reward: [
-        x => softcap(Decimal.add(player.age, 1).log(1e15).pow(.85).mul(.1).mul(Decimal.div(x, 1e22).add(1).log10().pow(.4)).add(1), 5, .5, "P"),
+        x => softcap(Decimal.add(player.age, 1).log(1e15).pow(.85).mul(.1).mul(Decimal.div(x, 1e22).add(1).log10().pow(.4)).add(1), 5, .5, "P").root(Seasons.in(2) ? 2 : 1),
         x => `Tree age boosts <b>L40</b> and <b>S28</b> by <b>${formatPow(x,3)}</b>.`
       ],
 
@@ -83,7 +83,7 @@ export const Weathers = {
         x => `Static Leaf, Tree aging speed, Seed, and Fruit multipliers are powered by <b>${formatPow(x)}</b>.`
       ],
       reward: [
-        x => softcap(Decimal.add(player.entropy, 1).log(100).pow(.525).mul(.05).mul(Decimal.div(x, 1e86).add(1).log10().div(10).pow(.1)).add(1), 2, 1, "LOG"),
+        x => softcap(Decimal.add(player.entropy, 1).log(100).pow(.525).mul(.05).mul(Decimal.div(x, 1e86).add(1).log10().div(10).pow(.1)).add(1), 2, 1, "LOG").root(Seasons.in(2) ? 2 : 1),
         x => `Entropy boosts <b>L3</b>, <b>L8</b>, and <b>L15</b> by <b>${formatPow(x,3)}</b>.`
       ],
 
@@ -177,6 +177,8 @@ export const Seasons = {
 
     player.season.active = x === A ? -1 : x
 
+    if (x === 2) player.first.virus = true;
+
     Resets.root.reset()
   },
 
@@ -186,6 +188,7 @@ export const Seasons = {
 
   ctn: [
     {
+      unl: () => true,
       name: "Fall",
       nerf: [
         () => 1,
@@ -199,8 +202,39 @@ export const Seasons = {
       goal: ['e400', x => `${format(x)} Leaves`],
 
       goal_intensity: () => 'ee6',
+    },{
+      unl: () => hasUpgrade("L\\-14"),
+      name: "Summer",
+      nerf: [
+        x => Decimal.pow(.5, x),
+        x => `Fertilizers don't give a boost. You cannot gain Cells and Bacteria. Entropy is rooted by <b>${format(Decimal.pow(x,-1))}</b>.`
+      ],
+      get reward() {
+        return `Unlock <b>Fallen Leaves</b>.`
+      },
+
+      get amount() { return player.entropy },
+      goal: ['e30', x => `${format(x)} Entropy`],
+
+      goal_intensity: x => Decimal.pow(100, x).mul(100).pow10(),
+    },{
+      unl: () => hasUpgrade("L\\-18"),
+      name: "Spring",
+      nerf: [
+        x => Decimal.sub(x, 1).pow_base(1.5),
+        x => `New exponentially increasing <b>Virus</b> stat has been added${Decimal.gt(x, 1) ? `, it is <b>${formatPercent(Decimal.sub(x, 1))}</b> stronger` : ""}. Weathers' reward is weaker. Incinerators are useless. Entropy is <b>square-rooted</b>.`
+      ],
+      get reward() {
+        return `Passively generate <b>1%</b> of your pending Sacred Leaves permanently.`
+      },
+
+      get amount() { return player.seeds },
+      goal: ['e175', x => `${format(x)} Seeds`],
+
+      goal_intensity: x => Decimal.pow(1e6, x).pow10(),
     },
   ] as {
+    unl(): boolean,
     name: string
     nerf: [(x: DecimalSource) => DecimalSource, (x: DecimalSource) => string]
     reward: string
@@ -231,6 +265,24 @@ export const Seasons = {
         for (let i = 0; i < 4; i++) if (this.is_completed(i)) x++;
         return Decimal.pow(2,x)
       },
+    })
+
+    new Effect({
+      active: () => player.season.active === 1,
+      type: EffectType.Exponent,
+      static: false,
+      id: "S2-nerf",
+      group: 'entropy',
+      calc: () => this.ctn[1].nerf[0](player.season.best[1][1])
+    })
+
+    new Effect({
+      active: () => player.season.active === 2,
+      type: EffectType.Exponent,
+      static: false,
+      id: "S3-nerf",
+      group: 'entropy',
+      calc: () => this.ctn[2].nerf[0](player.season.best[2][1])
     })
   },
 }

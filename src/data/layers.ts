@@ -41,6 +41,18 @@ export const Layers: Record<string, {
     reset: "root",
     upgrade_name: "Root Upgrades",
   },
+  ash: {
+    unlock: () => player.discovered_upgrades['RO\\35'],
+    currency: "ash",
+    upgrade_group: "A",
+    upgrade_name: "Ash Upgrades",
+  },
+  fallen: {
+    unlock: () => player.first.season[1],
+    currency: "fallen-0",
+    upgrade_group: "FA",
+    upgrade_name: "Fallen Leaf Upgrades",
+  },
 }
 
 export const LayerKeys = Object.keys(Layers)

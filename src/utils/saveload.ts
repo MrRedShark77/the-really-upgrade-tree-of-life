@@ -10,6 +10,7 @@ import { resetTemp, updateTemp } from "@/update";
 import type { DecimalSource } from "break_eternity.js"
 import { toRaw } from "vue";
 import { Layers } from "@/data/layers";
+import { FallenLeaves } from "@/data/fallen";
 
 const LOCALSTORAGE_NAME = "TUTOL-save";
 const VERSION = 1;
@@ -68,6 +69,12 @@ export type Save = {
     coal: DecimalSource;
   },
 
+  fallen: DecimalSource[],
+  sacred: DecimalSource,
+
+  virus: DecimalSource,
+  beneficial_virus: DecimalSource,
+
   first: {
     seed: boolean;
     fruit: boolean;
@@ -75,6 +82,9 @@ export type Save = {
     weather: boolean[];
     root: boolean;
     season: boolean[];
+    fallen: boolean[];
+    virus: boolean
+    beneficial_virus: boolean
   },
 
   timePlayed: number;
@@ -118,6 +128,9 @@ export function getSaveData(): Save {
       weather: [false,false,false,false],
       root: false,
       season: [false,false,false,false],
+      fallen: [],
+      virus: false,
+      beneficial_virus: false,
     },
 
     cell: {
@@ -159,6 +172,12 @@ export function getSaveData(): Save {
       ash: 0,
       coal: 0,
     },
+
+    fallen: [],
+    sacred: 0,
+
+    virus: 1,
+    beneficial_virus: 0,
 
     timePlayed: 0,
     lastPlayed: Date.now(),
@@ -209,6 +228,11 @@ export function getSaveData(): Save {
     for (const i of [0,1,2,3,5,6]) x[i] = true;
     s.options.advanced_upgrades[id] = x;
   };
+
+  for (let i = 0; i < FallenLeaves.resources.length; i++) {
+    s.fallen[i] = 0;
+    s.first.fallen[i] = i === 0;
+  }
 
   return s
 }
