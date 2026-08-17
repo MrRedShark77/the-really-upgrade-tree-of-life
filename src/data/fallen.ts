@@ -3,7 +3,7 @@ import { Currencies } from "./currencies"
 import { FPS, player, temp } from "@/main"
 import Decimal from "break_eternity.js"
 import { BigUpgradeGroups, BigUpgrades } from "./big_upgrades"
-import { DC } from "@/utils/decimal"
+import { DC, simpleCost } from "@/utils/decimal"
 import { Effect } from "@/utils/effect"
 
 export const FallenLeaves = {
@@ -46,12 +46,17 @@ export const FallenLeaves = {
     return x
   },
 
-  calculate_ratio(type: number) {
+  calculate_ratio(type: number): Decimal {
     let x = DC.D1
 
     for (let i = 0; i < type + 1; i++) x = x.mul(this.resources[i].ratio);
 
     return x
+  },
+
+  tier: {
+    get requirement() { return simpleCost(player.leaf_tier, "ES", FallenLeaves.calculate_ratio(6).mul(1e5), 5e4, 2) },
+    get amount() { return simpleCost(player.leaf_tier, "ESI", FallenLeaves.calculate_ratio(6).mul(1e5), 5e4, 2).floor().add(1) },
   },
 
   setup() {

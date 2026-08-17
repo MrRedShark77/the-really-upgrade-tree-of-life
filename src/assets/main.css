@@ -303,8 +303,18 @@ button * {
   --button-color: linear-gradient(135deg, #fe0, #f40, #ff0055);
 }
 
+.upgrade-flower {
+  --button-color: linear-gradient(0deg, #faf, #f6f, #faf);
+}
+.upgrade-pollen {
+  --button-color: linear-gradient(0deg, #b8f, #a6f, #b8f);
+}
+
 .upgrade-sacred {
   --button-color: radial-gradient(#ff7686, #cf0018);
+}
+.upgrade-leaf-tier {
+  --button-color: radial-gradient(#ff8ffb, #cf00c8);
 }
 
 .compost-button {

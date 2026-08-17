@@ -9,7 +9,7 @@ import Decimal from 'break_eternity.js';
 </script>
 
 <template>
-  <p>Virus is reset on Transform. You can't gain Virus outside Spring.</p>
+  <p v-if="Decimal.lt(player.season.best[2][0], 'e1200')">Virus is reset on Transform. You can't gain Virus outside Spring.</p>
   <div class="challenges-table">
     <div class="challenges-subtab">
       <p>

@@ -7,6 +7,7 @@ import PrimaryButton from '../PrimaryButton.vue';
 import { Resets } from '@/data/resets';
 import { Currencies } from '@/data/currencies';
 import Decimal from 'break_eternity.js';
+import { Effects } from '@/utils/effect.ts';
 
 function ratio(i: number) {
   const r = FallenLeaves.calculate_ratio(i)
@@ -33,6 +34,12 @@ const SL = Currencies.sacred
         <BigUpgradeGroup :group="'fallen-'+i" :width="2" />
       </div>
     </template>
+    <div v-if="player.first.fallen[6]" class="challenges-subtab">
+      <h3>Leaf Tier</h3>
+      <hr class="sub-line">
+      <p>Your Leaf Tier is <span class="big-text">{{ format(player.leaf_tier, 0) }}</span> (next at <b>{{ format(FallenLeaves.tier.requirement) }}</b> Basket cap).<br>➜ <span class="big-text">{{ formatMult(Effects['leaf-tier-boost'].temp) }}</span> Fallen Leaves of all types</p>
+      <BigUpgradeGroup :group="'leaf-tier'" :width="2" />
+    </div>
     <div v-if="player.first.fallen[3]" class="challenges-subtab">
       <h3>Sacred Leaves</h3>
       <hr class="sub-line">

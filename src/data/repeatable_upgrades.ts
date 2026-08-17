@@ -207,6 +207,28 @@ export const RepeatableUpgrades: Record<string, {
       display: x => formatMult(x),
     }),
   },
+  "FR\\3": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['FR\\2'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>+${formatPow(this.effect.base)}</b> to the Storm's reward.` },
+
+    cost: [
+      'fruits',
+      x => simpleCost(x, "ES", 'e100000', 'e1000', 'e100'),
+      x => simpleCost(x, "ESI", 'e100000', 'e1000', 'e100').floor().add(1)
+    ],
+    effect: {
+      get base() { return .5 },
+      calc(x) { return Decimal.mul(this.base, x).add(1) },
+    },
+    preEffect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      display: x => formatPow(x),
+    }),
+  },
 
   "ER\\1": {
     condition: () => hasUpgrade("E\\53"),
@@ -260,13 +282,36 @@ export const RepeatableUpgrades: Record<string, {
       x => simpleCost(Decimal.div(x, 1e23).root(Effect.effect('upg-E\\65')), "ESI", 1, 1.5, 1.05).floor().add(1)
     ],
     effect: {
-      base: 1.075,
+      get base() { return Decimal.add(1.075, Effect.effect("upg-E\\70")) },
       calc(x) { return Decimal.pow(this.base, x) },
     },
     preEffect: new Effect({
       type: EffectType.BaseMultiplier,
       static: true,
       group: 'fallen-0',
+      display: x => formatMult(x),
+    }),
+  },
+  "ROR\\2": {
+    condition: () => Decimal.gte(player.repeatable_upgrades['ROR\\1'][1], 100),
+
+    get max() { return Decimal.add(25, Effect.effect("rupg-SR\\3")) },
+
+    get description() { return `<b>${formatMult(this.effect.base,3)}</b> to Fallen Speed & Basket Cap.` },
+
+    cost: [
+      'roots',
+      x => simpleCost(x, "ES", 1, 2, 1.1).pow(Effect.effect('upg-E\\72')).mul(1e55),
+      x => simpleCost(Decimal.div(x, 1e55).root(Effect.effect('upg-E\\72')), "ESI", 1, 2, 1.1).floor().add(1)
+    ],
+    effect: {
+      get base() { return Decimal.add(1.05, 0) },
+      calc(x) { return Decimal.pow(this.base, x) },
+    },
+    preEffect: new Effect({
+      type: EffectType.BaseMultiplier,
+      static: true,
+      group: ['fallen-speed','fallen-basket'],
       display: x => formatMult(x),
     }),
   },

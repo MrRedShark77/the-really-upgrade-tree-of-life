@@ -1,6 +1,6 @@
 import { player, temp } from "@/main"
 import { Effect, EffectType } from "@/utils/effect"
-import { format, formatMult, formatPercent, formatPow } from "@/utils/formats"
+import { format, formatMult, formatPercent, formatPlus, formatPow } from "@/utils/formats"
 import { splitIntoGroups } from "@/utils/misc"
 import type { DecimalSource } from "break_eternity.js"
 import Decimal from "break_eternity.js"
@@ -24,6 +24,12 @@ export const Upgrades: Record<string, {
   [index: string]: unknown
 }> = {
   //#region Leaf
+  "L\\-21": {
+    get description() { return `Isotopes' boost to Cleaning EXP is powered based on their tier.` },
+    branch: ["L\\-20"],
+
+    cost: ['leaves', 'e300000'],
+  },
   "L\\-20": {
     get description() { return `True Autumn Leaves boost Sacred Leaves.` },
     branch: ["L\\-19"],
@@ -54,7 +60,7 @@ export const Upgrades: Record<string, {
     get description() { return `Unlock <b>Spring</b> season permanently.` },
     branch: ["L\\-14"],
 
-    cost: ['leaves', 'e75000'],
+    cost: ['leaves', '60000'],
   },
   "L\\-17": {
     get description() { return `Tree age boosts Entropy.` },
@@ -1482,7 +1488,7 @@ export const Upgrades: Record<string, {
     get description() { return `<b>${formatPow(3)}</b> to Virus permanently.` },
     branch: ["S\\50"],
 
-    cost: ['seeds', 'e56000'],
+    cost: ['seeds', 'e50000'],
 
     effect: new Effect({
       type: EffectType.Exponent,
@@ -1496,13 +1502,39 @@ export const Upgrades: Record<string, {
     get description() { return `<b>${formatPow(2)}</b> to Virus permanently.` },
     branch: ["S\\51"],
 
-    cost: ['seeds', 'e64000'],
+    cost: ['seeds', 'e60000'],
 
     effect: new Effect({
       type: EffectType.Exponent,
       static: true,
       group: "virus",
       calc: () => 2,
+    }),
+  },
+  "S\\53": {
+    get description() { return `<b>${formatMult(10)}</b> to Decay Speed.` },
+    branch: ["S\\52"],
+
+    cost: ['seeds', 'e100000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "decay-speed",
+      calc: () => 5,
+    }),
+  },
+  "S\\54": {
+    get description() { return `<b>${formatMult(10)}</b> to Decay Speed.` },
+    branch: ["S\\53"],
+
+    cost: ['seeds', 'e150000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "decay-speed",
+      calc: () => 5,
     }),
   },
   //#endregion Seed
@@ -2096,7 +2128,7 @@ export const Upgrades: Record<string, {
     effect: new Effect({
       type: EffectType.Exponent,
       static: false,
-      calc: () => Decimal.add(player.fruits, 1).log10().div(1500).add(1),
+      calc: () => softcap(Decimal.add(player.fruits, 1).log10().div(1500).add(1), 100, 1, "LOG"),
     }),
   },
   "F\\48": {
@@ -2177,6 +2209,19 @@ export const Upgrades: Record<string, {
       static: true,
       group: "virus",
       calc: () => 2,
+    }),
+  },
+  "F\\54": {
+    get description() { return `<b>${formatMult(5)}</b> to Flowers.` },
+    branch: ["F\\53"],
+
+    cost: ['fruits', 'e50000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "flowers",
+      calc: () => 5,
     }),
   },
   //#endregion
@@ -2261,7 +2306,7 @@ export const Upgrades: Record<string, {
     effect: new Effect({
       type: EffectType.Exponent,
       static: false,
-      calc: () => Decimal.add(player.entropy, 1).log2().mul(.1).add(1.2),
+      calc: () => softcap(Decimal.add(player.entropy, 1).log2().mul(.1).add(1.2), 1e3, 1, "LOG"),
     }),
   },
   "E\\8": {
@@ -2937,7 +2982,7 @@ export const Upgrades: Record<string, {
     effect: new Effect({
       type: EffectType.Exponent,
       static: false,
-      calc: () => Decimal.div(player.repeatable_upgrades['LR\\2'][0], 40).add(1),
+      calc: () => softcap(Decimal.div(player.repeatable_upgrades['LR\\2'][0], 40).add(1), 5, 1, "LOG"),
     }),
   },
   "E\\67": {
@@ -2978,6 +3023,47 @@ export const Upgrades: Record<string, {
       static: false,
       group: "BV",
       calc: () => Decimal.add(player.entropy, 1).log10().div(50).add(1),
+    }),
+  },
+  "E\\70": {
+    permanent: true,
+    get description() { return `The <b>ROR1</b>'s base is increased by its level.` },
+    branch: ["E\\69"],
+
+    cost: ['entropy', 'e3000'],
+
+    effect: new Effect({
+      type: EffectType.Addition,
+      static: false,
+      calc: () => Decimal.mul(player.repeatable_upgrades['ROR\\1'][0], .005),
+      display: x => formatPlus(x,3),
+    }),
+  },
+  "E\\71": {
+    permanent: true,
+    get description() { return `Beneficial Virus boosts Roots.` },
+    branch: ["E\\69"],
+
+    cost: ['entropy', 'e3333'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "roots",
+      calc: () => Decimal.div(player.beneficial_virus, 1e10).add(1).log(100).pow(3).add(1),
+    }),
+  },
+  "E\\72": {
+    permanent: true,
+    get description() { return `Beneficial Virus divides <b>ROR2</b>'s cost scaling.` },
+    branch: ["E\\71"],
+
+    cost: ['entropy', 'e4444'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      calc: () => Decimal.add(player.beneficial_virus, 100).log(100).root(-2),
     }),
   },
   //#endregion
@@ -3717,6 +3803,111 @@ export const Upgrades: Record<string, {
       calc: () => softcap(Decimal.add(player.big_upgrades['virus\\2'],player.big_upgrades['virus\\3']), 100, 1/3, "L"),
     }),
   },
+  "RO\\59": {
+    get description() { return `<b>${formatMult(10)}</b> to Roots. <i>Prepare...</i>` },
+    branch: ["RO\\53"],
+
+    cost: ['roots', 1e42],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "roots",
+      calc: () => 10,
+    }),
+  },
+  "RO\\60": {
+    permanent: true,
+    get description() { return `<i>Idle path.</i> Unlock <b>Radiation</b> permanently. <i><b>${formatMult(1e6)}</b> to cost of <b>RO61</b>.</i>` },
+    branch: ["RO\\59"],
+
+    get cost () { return ['roots', 1e45 * 1e10 ** +hasUpgrade("RO\\61")] as [string, DecimalSource] },
+  },
+  "RO\\61": {
+    permanent: true,
+    get description() { return `<i>Active path.</i> Unlock <b>Flower</b> permanently. <i><b>${formatMult(1e10)}</b> to cost of <b>RO60</b>.</i>` },
+    branch: ["RO\\59"],
+
+    get cost () { return ['roots', 1e45 * 1e6 ** +hasUpgrade("RO\\60")] as [string, DecimalSource] },
+  },
+  "RO\\64": {
+    get description() { return `Roots boost Flowers.` },
+    branch: ["RO\\61"],
+
+    cost: ['roots', 1e46],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "flowers",
+      calc: () => Decimal.div(player.root.amount, 1e45).add(1).root(3),
+    }),
+  },
+  "RO\\65": {
+    get description() { return `Leaves boost Floral EXP.` },
+    branch: ["RO\\64"],
+
+    cost: ['roots', 1e48],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "floral-exp",
+      calc: () => Decimal.add(player.leaves, 1).log10().div(2e4).add(1),
+    }),
+  },
+  "RO\\66": {
+    get description() { return `Roots boost Decay Speed.` },
+    branch: ["RO\\60"],
+
+    cost: ['roots', 1e46],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "decay-speed",
+      calc: () => Decimal.div(player.root.amount, 1e45).add(1).root(4),
+    }),
+  },
+  "RO\\67": {
+    get description() { return `<b>${formatMult(1e111)}</b> to Entropy.` },
+    branch: ["RO\\66"],
+
+    cost: ['roots', 1e48],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "entropy",
+      calc: () => 1e111,
+    }),
+  },
+  "RO\\68": {
+    get description() { return `Summer challenge's best score boosts Virus.` },
+    branch: ["RO\\60","RO\\61"],
+
+    cost: ['roots', 1e57],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: "virus",
+      calc: () => Decimal.add(player.season.best[2][0], 1).log10().div(500).add(1).pow(4),
+    }),
+  },
+  "RO\\69": {
+    get description() { return `<b>${formatPow(1.2)}</b> to Decay Speed.` },
+    branch: ["RO\\66"],
+
+    cost: ['roots', 1e63],
+
+    effect: new Effect({
+      type: EffectType.Exponent,
+      static: true,
+      group: "decay-speed",
+      calc: () => 1.2,
+    }),
+  },
   //#endregion
   //#region Ash
   "A\\1": {
@@ -3911,6 +4102,20 @@ export const Upgrades: Record<string, {
       calc: () => 3,
     }),
   },
+  "A\\16": {
+    permanent: true,
+    get description() { return `<b>${formatMult(10)}</b> to Decay Speed permanently.` },
+    branch: ["A\\15"],
+
+    cost: ['ash', 'e1000'],
+
+    effect: new Effect({
+      type: EffectType.Multiplier,
+      static: true,
+      group: "decay-speed",
+      calc: () => 10,
+    }),
+  },
   //#endregion
   //#region Fallen Leaves
   "FA\\1": {
@@ -4019,6 +4224,27 @@ export const Upgrades: Record<string, {
       group: "fallen-speed",
       calc: () => 5,
     }),
+  },
+  "FA\\13": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Flower</b> permanently.` },
+    branch: ['FA\\9'],
+
+    cost: ['fallen-0', 1e270],
+  },
+  "FA\\14": {
+    permanent: true,
+    get description() { return `Permanently generate Cleaning EXP based on Radiation cap.` },
+    branch: ['FA\\13'],
+
+    cost: ['fallen-0', 1e285],
+  },
+  "FA\\15": {
+    permanent: true,
+    get description() { return `Unlock <b>Auto-Diamond Leaf Upgrades</b> permanently.` },
+    branch: ['FA\\7'],
+
+    cost: ['fallen-0', 1e300],
   },
   //#endregion
 };

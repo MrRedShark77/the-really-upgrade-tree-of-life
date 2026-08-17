@@ -195,6 +195,32 @@ export const Resets: Record<string, {
       temp.basket_cap = 25;
     },
   },
+  pollen: {
+    get reached() { return Decimal.gte(player.flower.level, 10) },
+
+    get description() {
+      return this.reached ? `Pollenate your Flowers for <b>${format(temp.currencies.pollen, 0)}</b> Pollen` : `Reach Floral Level <b>${format(10,0)}</b>`
+    },
+
+    perform() {
+      if (!this.reached) return;
+
+      player.flower.pollen = Decimal.add(player.flower.pollen, temp.currencies.pollen)
+      player.first.pollen = true
+
+      this.reset();
+    },
+
+    reset() {
+      player.flower.amount = 0
+      player.flower.exp = 0
+      player.flower.level = 0
+      resetBigUpgradesByGroup("flower",['flower\\3'])
+
+      temp.currencies.flowers = 1;
+      temp.floral_exp_mult = 1;
+    },
+  },
 }
 
 export function respecRootUpgrades() {

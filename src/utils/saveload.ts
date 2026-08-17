@@ -11,6 +11,7 @@ import type { DecimalSource } from "break_eternity.js"
 import { toRaw } from "vue";
 import { Layers } from "@/data/layers";
 import { FallenLeaves } from "@/data/fallen";
+import { Radiation } from "@/data/great-split";
 
 const LOCALSTORAGE_NAME = "TUTOL-save";
 const VERSION = 1;
@@ -71,9 +72,25 @@ export type Save = {
 
   fallen: DecimalSource[],
   sacred: DecimalSource,
+  leaf_tier: DecimalSource,
 
   virus: DecimalSource,
   beneficial_virus: DecimalSource,
+
+  flower: {
+    amount: DecimalSource,
+    exp: DecimalSource,
+    level: DecimalSource,
+    pollen: DecimalSource,
+  },
+
+  radiation: {
+    cleaning_power: DecimalSource,
+    cleaning_exp: DecimalSource,
+    cleaned: DecimalSource,
+    isotopes: [DecimalSource, DecimalSource][],
+    tiers: DecimalSource[],
+  },
 
   first: {
     seed: boolean;
@@ -85,6 +102,7 @@ export type Save = {
     fallen: boolean[];
     virus: boolean
     beneficial_virus: boolean
+    pollen: boolean,
   },
 
   timePlayed: number;
@@ -131,6 +149,7 @@ export function getSaveData(): Save {
       fallen: [],
       virus: false,
       beneficial_virus: false,
+      pollen: false,
     },
 
     cell: {
@@ -175,9 +194,25 @@ export function getSaveData(): Save {
 
     fallen: [],
     sacred: 0,
+    leaf_tier: 0,
 
     virus: 1,
     beneficial_virus: 0,
+
+    flower: {
+      amount: 0,
+      exp: 0,
+      level: 0,
+      pollen: 0,
+    },
+
+    radiation: {
+      cleaning_power: 0,
+      cleaning_exp: 0,
+      cleaned: 0,
+      isotopes: [],
+      tiers: [],
+    },
 
     timePlayed: 0,
     lastPlayed: Date.now(),
@@ -233,6 +268,8 @@ export function getSaveData(): Save {
     s.fallen[i] = 0;
     s.first.fallen[i] = i === 0;
   }
+
+  for (let i = 0; i < Radiation.isotopes.length; i++) s.radiation.isotopes[i] = [0,0];
 
   return s
 }

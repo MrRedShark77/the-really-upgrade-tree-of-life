@@ -146,13 +146,13 @@ export function simpleCost (num: DecimalSource, type: CostMode, ...args: Decimal
       return Decimal.div(x,base).ln().mul(ln2).mul(4).add(ln.sqr()).sqrt().sub(ln).div(ln2).div(2)
     }
 
-    case "P": { // a + 2 * a + ... = a * (x + x^2) / 2
-      const [base] = args
-      return x.sqr().add(x).div(2).mul(base)
+    case "P": { // a + (a + b) + (a + 2 * b) + ... = a * (x + 1) + b * (x + x^2) / 2
+      const [base,increment] = args
+      return x.sqr().add(x).div(2).mul(increment).add(x.add(1).mul(base))
     }
     case "PI": {
-      const [base] = args
-      return solveQuadraticPositive(1,1,x.div(base).mul(-2))
+      const [base,increment] = args
+      return solveQuadraticPositive(increment,Decimal.mul(base,2).add(increment),Decimal.mul(base,2).sub(x.mul(2)))
     }
 
     default: {

@@ -2,8 +2,9 @@ import type { DecimalSource } from "break_eternity.js"
 import { buyAllUpgrades, hasUpgrade } from "./upgrades"
 import { Composter } from "./composter"
 import { purchaseAllRepeatableUpgrades } from "./repeatable_upgrades"
-import { player } from "@/main"
+import { player, temp } from "@/main"
 import { purchaseAllBigUpgrades } from "./big_upgrades"
+import Decimal from "break_eternity.js"
 
 export const Auto: Record<string, {
   condition(): boolean
@@ -13,7 +14,7 @@ export const Auto: Record<string, {
 
   color?: string
 
-  tick?(): void
+  tick?(dt: number): void
 }> = {
   "LU": {
     condition: () => true,
@@ -93,6 +94,16 @@ export const Auto: Record<string, {
     tick() {
       const p = hasUpgrade("RO\\M2") ? 4 : 3
       for (let i = 0; i < p; i++) Composter.compost(i, true);
+
+      /*
+      purchaseAllBigUpgrades("fallen-5")
+      purchaseAllBigUpgrades("fallen-6")
+      purchaseAllBigUpgrades("sacred")
+      purchaseAllBigUpgrades("virus")
+      purchaseAllBigUpgrades("BV")
+      purchaseAllBigUpgrades("flower")
+      purchaseAllBigUpgrades("pollen")
+      */
     },
   },
 
@@ -189,6 +200,28 @@ export const Auto: Record<string, {
 
     tick() { purchaseAllBigUpgrades("fallen-4") },
   },
+  "FAU5": {
+    condition: () => hasUpgrade("FA\\15"),
+    name: "Diamond Leaf Upgrades Automation",
+    get description() { return `Automate Diamond Leaf upgrades.` },
+    cost: 200,
+
+    color: 'linear-gradient(135deg, lightcyan, cyan)',
+
+    tick() { purchaseAllBigUpgrades("fallen-5") },
+  },
+  "FC": {
+    condition: () => hasUpgrade("FA\\13"),
+    name: "Flower Autoclicker",
+    get description() { return `Autoclick Flowers every tenth second.` },
+    cost: 400,
+
+    color: 'linear-gradient(0deg, #faf, #f6f, #faf)',
+
+    tick(dt) { player.flower.exp = Decimal.mul(temp.floral_exp_mult, dt*10).add(player.flower.exp) },
+  },
 }
 
 export const AutoKeys = Object.keys(Auto)
+
+export function isAutoEnabled(id: string) { return Auto[id].condition() && player.auto.enabled[id] }

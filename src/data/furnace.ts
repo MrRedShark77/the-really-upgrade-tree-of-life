@@ -27,8 +27,8 @@ export const Furnace = {
       return x
     },
 
-    get require() { return Decimal.pow(10, simpleCost(Decimal.add(player.furnace.coal, 2), "P", 1)).mul(this.base) },
-    get bulk() { return simpleCost((Decimal.div(player.furnace.ash, this.base).max(1).log10()), "PI", 1).floor().sub(1) },
+    get require() { return Decimal.pow(10, simpleCost(Decimal.add(player.furnace.coal, 2), "P", 0, 1)).mul(this.base) },
+    get bulk() { return simpleCost((Decimal.div(player.furnace.ash, this.base).max(1).log10()), "PI", 0, 1).floor().sub(1) },
   },
 
   setup() {

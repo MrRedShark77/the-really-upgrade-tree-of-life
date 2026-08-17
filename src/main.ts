@@ -17,6 +17,7 @@ import { Effect } from './utils/effect'
 import { Incinerator } from './data/incinerator'
 import { Furnace } from './data/furnace'
 import { FallenLeaves } from './data/fallen'
+import { setupGreatSplit } from './data/great-split'
 
 export const FPS = 30
 
@@ -33,6 +34,7 @@ export function load() {
   Seasons.setup()
   Incinerator.setup()
   Furnace.setup()
+  setupGreatSplit()
 
   Composter.setup()
   Cell.setup()

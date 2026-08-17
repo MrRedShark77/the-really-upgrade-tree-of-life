@@ -38,7 +38,7 @@ export const Weathers = {
         x => `The exponent of Leaves, Seeds, and Fruits is reduced by <b>${formatMult(x,2,true,.1)}</b>.`
       ],
       reward: [
-        x => Decimal.add(player.bacteria.amount, 2.5).log(2.5).pow(3.7).pow(Decimal.div(x, 1e40).add(1).log(1e3).root(2).mul(.45).add(1)).root(Seasons.in(2) ? 2 : 1),
+        x => Decimal.add(player.bacteria.amount, 2.5).log(2.5).pow(3.7).pow(Decimal.div(x, 1e40).add(1).log(1e3).root(2).mul(.45).add(1)).root(Seasons.in(2) ? 2 : 1).pow(Effect.effect("rupg-FR\\3")),
         x => `Unlock <b>Auto-Composting</b> permanently, and Bacteria boosts Leaves by <b>${formatMult(x)}</b>.`
       ],
 
@@ -64,8 +64,8 @@ export const Weathers = {
     },{
       name: "Drought",
       nerf: [
-        x => Decimal.pow(.1, x),
-        x => `Leaves and Tree aging speed are rooted by <b>${format(Decimal.pow(x,-1))}</b>.`
+        x => x,
+        x => `Leaves and Tree aging speed are rooted by <b>${format(Decimal.neg(x).pow_base(.1))}</b> and then divided by <b>${format(Decimal.sub(1, x).pow_base(.5))}</b> after the exponent.`
       ],
       reward: [
         x => softcap(Decimal.add(player.age, 1).log(1e15).pow(.85).mul(.1).mul(Decimal.div(x, 1e22).add(1).log10().pow(.4)).add(1), 5, .5, "P").root(Seasons.in(2) ? 2 : 1),
@@ -123,9 +123,9 @@ export const Weathers = {
       active: () => player.weather.active === 2,
       type: EffectType.Exponent,
       static: false,
-      id: "C3-nerf",
+      id: "C3-nerf-2",
       group: ['leaves','age'],
-      calc: () => this.ctn[2].nerf[0](player.weather.best[2][1])
+      calc: () => Decimal.neg(this.ctn[2].nerf[0](player.weather.best[2][1])).pow_base(10)
     })
 
     new Effect({
@@ -225,7 +225,7 @@ export const Seasons = {
         x => `New exponentially increasing <b>Virus</b> stat has been added${Decimal.gt(x, 1) ? `, it is <b>${formatPercent(Decimal.sub(x, 1))}</b> stronger` : ""}. Weathers' reward is weaker. Incinerators are useless. Entropy is <b>square-rooted</b>.`
       ],
       get reward() {
-        return `Passively generate <b>1%</b> of your pending Sacred Leaves permanently.`
+        return `Passively generate <b>1%</b> of your pending Sacred Leaves permanently. At <b>${format('e1200')}</b> Seeds, allow to gain Virus and replace 2 Virus Upgrades outside of <b>Spring</b>.`
       },
 
       get amount() { return player.seeds },

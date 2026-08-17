@@ -5,6 +5,7 @@ import Decimal from "break_eternity.js";
 import { D, scaleAll, expPow, sumBase, simpleCost, advanced_scale, advanced_softcap, solveQuadraticPositive } from "./utils/decimal";
 import { calc } from "./update";
 import { Effects, TotalEffectGroups } from "./utils/effect";
+import { format, formatTime } from "./utils/formats";
 
 declare global {
   interface Window {
@@ -28,6 +29,6 @@ if (import.meta.env.DEV) {
   }
 
   window.dev = {
-    save, calc, temp, copySave, deepAssign, Effects, TotalEffectGroups
+    save, calc, temp, copySave, deepAssign, Effects, TotalEffectGroups, format, formatTime
   }
 }

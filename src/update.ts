@@ -10,9 +10,10 @@ import { Cell, Virus } from "./data/cell";
 import { Bacteria } from "./data/bacteria";
 import { Auto, AutoKeys } from "./data/automation";
 import { Seasons, Weathers } from "./data/challenges";
-import { DC, scale } from "./utils/decimal";
+import { DC, scale, sumBase } from "./utils/decimal";
 import { Furnace } from "./data/furnace";
 import { FallenLeaves } from "./data/fallen";
+import { Flower, Radiation } from "./data/great-split";
 
 // Calculation
 
@@ -83,9 +84,11 @@ export function calc(dt: number) {
       r = r.mul(FallenLeaves.resources[i].ratio)
       if (!player.first.fallen[i] && r.lte(temp.basket_cap)) player.first.fallen[i] = true;
     }
+
+    if (Decimal.gte(temp.basket_cap, FallenLeaves.tier.requirement)) player.leaf_tier = Decimal.add(player.leaf_tier, 1).max(FallenLeaves.tier.amount);
   }
 
-  if (Seasons.in(2)) player.virus = Virus.calc(dt);
+  if (Seasons.in(2) || Decimal.gte(player.season.best[2][0], 'e1200')) player.virus = Virus.calc(dt);
 
   if (Decimal.gte(player.virus, 'ee5')) player.first.beneficial_virus = true;
 
@@ -94,11 +97,43 @@ export function calc(dt: number) {
     C.amount = Decimal.mul(C.gain, C.passive).mul(dt).add(C.amount)
   }
 
+  if (hasUpgrade("RO\\61") && Decimal.gte(player.flower.exp, Flower.level.require)) player.flower.level = Decimal.add(player.flower.level, 1).max(Flower.level.bulk);
+
+  if (hasUpgrade("RO\\60")) {
+    player.radiation.cleaning_power = Decimal.mul(temp.radiation.cleaning_power, dt).add(player.radiation.cleaning_power)
+
+    if (hasUpgrade("FA\\14")) player.radiation.cleaning_exp = Decimal.mul(temp.radiation.cleaning_exp, Radiation.cap).mul(dt).add(player.radiation.cleaning_exp);
+
+    let cap: DecimalSource = 0;
+
+    for (let i = Radiation.isotopes.length-1; i >= 0; i--) {
+      const R = Radiation.isotopes[i], A = player.radiation.isotopes[i][1]
+      cap = Decimal.mul(player.radiation.isotopes[i+1]?.[1] ?? 0, 5).add(10)
+
+      if (Decimal.lt(A, cap)) {
+        const X = player.radiation.isotopes[i][0] = Decimal.mul(temp.radiation.decaying_speed, dt).add(player.radiation.isotopes[i][0]).min(sumBase(cap, R.half_life[1]).mul(R.half_life[0]));
+        if (sumBase(Decimal.add(A, 1), R.half_life[1]).mul(R.half_life[0]).lte(X)) {
+          player.radiation.isotopes[i][1] = sumBase(Decimal.div(X, R.half_life[0]), R.half_life[1], true).floor().clamp(Decimal.add(A, 1), cap)
+        }
+      }
+    }
+
+    cap = Radiation.cap
+
+    if (Decimal.lt(player.radiation.cleaned, cap)) player.radiation.cleaned = Decimal.mul(player.radiation.cleaning_power, dt).add(player.radiation.cleaned).min(cap);
+
+    for (let i = 0; i < Radiation.tiers.length; i++) {
+      const T = Radiation.tiers[i], L = player.radiation.tiers[i], C = i === 0 ? Radiation.exp : player.radiation.tiers[i-1];
+
+      if (Decimal.gte(C, T.requirement[0](L))) player.radiation.tiers[i] = Decimal.add(L, 1).max(T.requirement[1](C));
+    }
+  }
+
   if (hasUpgrade("FA\\8")) player.root.total = Decimal.mul(temp.currencies.roots, Currencies.roots.passive).mul(dt).add(player.root.total);
 
   for (const i of AutoKeys) {
     const A = Auto[i]
-    if (A.condition() && player.auto.enabled[i]) A.tick?.();
+    if (A.condition() && player.auto.enabled[i]) A.tick?.(dt);
   }
 
   state.time += dt
@@ -128,6 +163,14 @@ export type TempData = {
   basket_cap: DecimalSource
 
   virus_mult: DecimalSource
+
+  floral_exp_mult: DecimalSource
+
+  radiation: {
+    cleaning_power: DecimalSource,
+    decaying_speed: DecimalSource,
+    cleaning_exp: DecimalSource,
+  },
 
   [index: string]: unknown;
 }
@@ -159,6 +202,14 @@ export function getTempData(): TempData {
     basket_cap: 25,
 
     virus_mult: 1,
+
+    floral_exp_mult: 1,
+
+    radiation: {
+      cleaning_power: 1,
+      decaying_speed: 1,
+      cleaning_exp: 1,
+    },
 
     weathers: [],
   };
@@ -208,6 +259,12 @@ export function updateTemp() {
   temp.basket_cap = Effect.calculateEffects("fallen-basket", 25)
 
   temp.virus_mult = Virus.speed
+
+  temp.floral_exp_mult = Effect.calculateEffects("floral-exp", 1)
+
+  temp.radiation.cleaning_power = Effect.calculateEffects("cleaning-power", 1)
+  temp.radiation.cleaning_exp = Effect.calculateEffects("cleaning-exp", 1)
+  temp.radiation.decaying_speed = Effect.calculateEffects("decay-speed", 600)
 
   for (const i in Currencies) temp.currencies[i] = Currencies[i].gain;
 }

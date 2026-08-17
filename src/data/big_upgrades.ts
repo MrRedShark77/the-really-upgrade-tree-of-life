@@ -7,6 +7,7 @@ import { hasUpgrade } from "./upgrades"
 import { splitIntoGroups } from "@/utils/misc"
 import { Currencies } from "./currencies"
 import { Effect, EffectType } from "@/utils/effect"
+import { Seasons } from "./challenges"
 
 export const BigUpgrades: Record<string, {
   unl(): boolean,
@@ -237,7 +238,7 @@ export const BigUpgrades: Record<string, {
   "fallen-3\\2": {
     unl: () => false,
     get description() { return `Increase Incinerator's Entropy buff.` },
-    cost: ['', x => simpleCost(x, "E", 5, 3).floor(), x => simpleCost(x, "EI", 5, 3).floor().add(1)],
+    cost: ['', x => simpleCost(scale(x, 125, 2, "P"), "E", 5, 3).floor(), x => scale(simpleCost(x, "EI", 5, 3), 125, 2, "P", true).floor().add(1)],
     effect: [1, x => Decimal.mul(.1, x).add(1), x => formatPow(x)],
     preEffect: new Effect({
       type: EffectType.Exponent,
@@ -326,7 +327,7 @@ export const BigUpgrades: Record<string, {
   "fallen-5\\2": {
     unl: () => false,
     get description() { return `Raise static Leaf miltiplier.` },
-    cost: ['', x => simpleCost(x, "E", 200, 2).floor(), x => simpleCost(x, "EI", 200, 2).floor().add(1)],
+    cost: ['', x => simpleCost(scale(x, 100, 2, "P"), "E", 200, 2).floor(), x => scale(simpleCost(x, "EI", 200, 2), 100, 2, "P", true).floor().add(1)],
     effect: [1, x => Decimal.mul(.1, x).add(1), x => formatPow(x)],
     preEffect: new Effect({
       type: EffectType.BaseExponent,
@@ -356,7 +357,7 @@ export const BigUpgrades: Record<string, {
     })
   },
   //#endregion
-  //#region Diamond Leaves
+  //#region True Autumn Leaves
   "fallen-6\\1": {
     unl: () => false,
     get description() { return `Increase Diamond Leaves gain.` },
@@ -371,7 +372,7 @@ export const BigUpgrades: Record<string, {
   "fallen-6\\2": {
     unl: () => false,
     get description() { return `Raise Virus gain.` },
-    cost: ['', x => simpleCost(x, "E", 3e9, 2).floor(), x => simpleCost(x, "EI", 3e9, 2).floor().add(1)],
+    cost: ['', x => simpleCost(scale(x, 25, 2, "P"), "E", 3e9, 2).floor(), x => scale(simpleCost(x, "EI", 3e9, 2), 25, 2, "P", true).floor().add(1)],
     effect: [1, x => Decimal.pow(1.25, x), x => formatPow(x)],
     preEffect: new Effect({
       type: EffectType.Exponent,
@@ -398,6 +399,56 @@ export const BigUpgrades: Record<string, {
       type: EffectType.Multiplier,
       static: false,
       group: "fallen-speed",
+    })
+  },
+  //#endregion
+  //#region Leaf Tier
+  "leaf-tier\\1": {
+    unl: () => true,
+    get description() { return `Increase Leaves falling speed and Basket cap.` },
+    nospend: true,
+    cost: ['leaf-tier', x => Decimal.add(x,1), x => Decimal.floor(x)],
+    effect: [1, x => Decimal.pow(3,x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: ["fallen-speed","fallen-basket"],
+    })
+  },
+  "leaf-tier\\2": {
+    unl: () => true,
+    get description() { return `Increase Sacred Leaves gain.` },
+    nospend: true,
+    cost: ['leaf-tier', x => Decimal.add(x,2), x => Decimal.sub(x,1).floor()],
+    effect: [1, x => Decimal.pow(5,x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "sacred",
+    })
+  },
+  "leaf-tier\\3": {
+    unl: () => true,
+    get description() { return `Increase Fallen Leaves gain.` },
+    nospend: true,
+    cost: ['leaf-tier', x => Decimal.add(x,4), x => Decimal.sub(x,3).floor()],
+    effect: [1, x => Decimal.pow(1e6,x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "fallen-0",
+    })
+  },
+  "leaf-tier\\4": {
+    unl: () => true,
+    get description() { return `Increase Leafstone gain.` },
+    nospend: true,
+    cost: ['leaf-tier', x => Decimal.mul(x,2).add(8), x => Decimal.sub(x,8).div(2).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.5,x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "feal-stone",
     })
   },
   //#endregion
@@ -490,12 +541,34 @@ export const BigUpgrades: Record<string, {
       static: false,
     })
   },
+  "virus\\5": {
+    unl: () => Seasons.is_completed(2) && player.season.active !== 2,
+    get description() { return `Increase Flowers gain.` },
+    cost: ['virus', x => Decimal.pow(10, x).mul(1e27).pow10(), x => Decimal.log10(x).div(1e27).log(10).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.5, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "flowers",
+    })
+  },
+  "virus\\6": {
+    unl: () => Seasons.is_completed(2) && player.season.active !== 2,
+    get description() { return `Increase Decay Speed.` },
+    cost: ['virus', x => Decimal.pow(10, x).mul(1e27).pow10(), x => Decimal.log10(x).div(1e27).log(10).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.5, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "decay-speed",
+    })
+  },
   //#endregion
   //#region Beneficial Virus
   "BV\\1": {
     unl: () => true,
     get description() { return `Delay Sueprscaled Fertilizers.` },
-    cost: ['BV', x => simpleCost(x, "E", 5, 3).floor(), x => simpleCost(x, "EI", 5, 3).floor().add(1)],
+    cost: ['BV', x => simpleCost(scale(x, 100, 2, "P"), "E", 5, 3).floor(), x => scale(simpleCost(x, "EI", 5, 3), 100, 2, "P", true).floor().add(1)],
     effect: [0, x => Decimal.mul(x, 10), x => formatPlus(x)],
     preEffect: new Effect({
       type: EffectType.Addition,
@@ -516,7 +589,7 @@ export const BigUpgrades: Record<string, {
   "BV\\3": {
     unl: () => true,
     get description() { return `Increase Sacred Leaves gain.` },
-    cost: ['BV', x => simpleCost(x, "E", 1000, 2).floor(), x => simpleCost(x, "EI", 1000, 2).floor().add(1)],
+    cost: ['BV', x => simpleCost(scale(x, 50, 2, "P"), "E", 1000, 2).floor(), x => scale(simpleCost(x, "EI", 1000, 2), 50, 2, "P", true).floor().add(1)],
     effect: [1, x => Decimal.pow(1.15, x), x => formatMult(x)],
     preEffect: new Effect({
       type: EffectType.Multiplier,
@@ -527,12 +600,82 @@ export const BigUpgrades: Record<string, {
   "BV\\4": {
     unl: () => true,
     get description() { return `Increase Beneficial Virus gain.` },
-    cost: ['BV', x => simpleCost(x, "E", 1e4, 4).floor(), x => simpleCost(x, "EI", 1e4, 4).floor().add(1)],
+    cost: ['BV', x => simpleCost(scale(x, 25, 2, "P"), "E", 1e4, 4).floor(), x => scale(simpleCost(x, "EI", 1e4, 4), 25, 2, "P", true).floor().add(1)],
     effect: [1, x => Decimal.pow(2, x), x => formatMult(x)],
     preEffect: new Effect({
       type: EffectType.Multiplier,
       static: false,
       group: "BV",
+    })
+  },
+  //#endregion
+  //#region Flowers
+  "flower\\1": {
+    unl: () => true,
+    get description() { return `Increase Flowers gain.` },
+    cost: ['flowers', x => simpleCost(x, "E", 10, 1.5).floor(), x => simpleCost(x, "EI", 10, 1.5).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.2, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "flowers",
+    })
+  },
+  "flower\\2": {
+    unl: () => true,
+    get description() { return `Increase Floral EXP gain.` },
+    cost: ['flowers', x => simpleCost(x, "E", 100, 1.5).floor(), x => simpleCost(x, "EI", 100, 1.5).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.1, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "floral-exp",
+    })
+  },
+  "flower\\3": {
+    unl: () => true,
+    get description() { return `Raise static Fruit multiplier.` },
+    cost: ['flowers', x => simpleCost(x, "E", 1e3, 5).floor(), x => simpleCost(x, "EI", 1e3, 5).floor().add(1)],
+    effect: [1, x => Decimal.mul(.05, x).add(1), x => formatPow(x)],
+    preEffect: new Effect({
+      type: EffectType.BaseExponent,
+      static: false,
+      group: "fruits",
+    })
+  },
+  //#endregion
+  //#region Pollen
+  "pollen\\1": {
+    unl: () => true,
+    get description() { return `Increase Flowers and Floral EXP gain.` },
+    cost: ['pollen', x => simpleCost(x, "E", 5, 1.75).floor(), x => simpleCost(x, "EI", 5, 1.75).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.5, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: ["flowers","floral-exp"],
+    })
+  },
+  "pollen\\2": {
+    unl: () => true,
+    get description() { return `Increase Virus gain.` },
+    cost: ['pollen', x => simpleCost(x, "E", 10, 1.5).floor(), x => simpleCost(x, "EI", 10, 1.5).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.5, x), x => formatPow(x)],
+    preEffect: new Effect({
+      type: EffectType.Exponent,
+      static: false,
+      group: "virus",
+    })
+  },
+  "pollen\\3": {
+    unl: () => true,
+    get description() { return `Increase Pollen gain.` },
+    cost: ['pollen', x => simpleCost(x, "E", 25, 2.5).floor(), x => simpleCost(x, "EI", 25, 2.5).floor().add(1)],
+    effect: [1, x => Decimal.pow(1.25, x), x => formatMult(x)],
+    preEffect: new Effect({
+      type: EffectType.Multiplier,
+      static: false,
+      group: "pollen",
     })
   },
   //#endregion

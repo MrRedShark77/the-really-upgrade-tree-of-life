@@ -1,16 +1,20 @@
 import { player } from "@/main";
-import { DC } from "@/utils/decimal";
+import { DC, scale } from "@/utils/decimal";
 import { Effect, EffectType } from "@/utils/effect";
 import type { DecimalSource } from "break_eternity.js";
 import Decimal from "break_eternity.js";
 import { hasUpgrade } from "./upgrades";
 import { Seasons } from "./challenges";
 
+function I_NERF_EXP(x: DecimalSource): Decimal {
+  return scale(x,30,2,'P').pow(hasUpgrade("RO\\41") ? 1.2 : 1.25)
+}
+
 export const Incinerator = {
   levels: [
-    [() => true, x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-8).pow10(), 'fruits'],
-    [() => hasUpgrade("RO\\29"), x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-20).pow10(), 'seeds'],
-    [() => hasUpgrade("RO\\40"), x => Decimal.pow(x, hasUpgrade("RO\\41") ? 1.2 : 1.25).mul(-35).pow10(), 'leaves'],
+    [() => true, x => I_NERF_EXP(x).mul(-8).pow10(), 'fruits'],
+    [() => hasUpgrade("RO\\29"), x => I_NERF_EXP(x).mul(-20).pow10(), 'seeds'],
+    [() => hasUpgrade("RO\\40"), x => I_NERF_EXP(x).mul(-35).pow10(), 'leaves'],
   ] as [
     () => boolean,
     (x: DecimalSource) => DecimalSource,

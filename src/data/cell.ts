@@ -35,6 +35,7 @@ export const Cell = {
 
     const S = temp.cell_overflow
 
+    amount = scale(amount, 1e6, 2, "P");
     amount = scale(amount, ...S[1], "L");
     amount = scale(amount, ...S[0], "ME2");
 
@@ -43,6 +44,7 @@ export const Cell = {
 
     amount = scale(amount, ...S[0], "ME2", true);
     amount = scale(amount, ...S[1], "L", true);
+    amount = scale(amount, 1e6, 2, "P", true);
 
     amount = amount.pow10()
 

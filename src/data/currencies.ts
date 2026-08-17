@@ -8,7 +8,8 @@ import { advanced_softcap, softcap } from "@/utils/decimal";
 import { format, formatGain, formatMult, formatPercent, formatTime } from "@/utils/formats";
 import { softcapped_text } from "@/utils/misc";
 import { Cell, Virus } from "./cell";
-import { Seasons } from "./challenges";
+import { Seasons, Weathers } from "./challenges";
+import { isAutoEnabled } from "./automation";
 
 export const Currencies: Record<string, {
   name: string;
@@ -24,7 +25,11 @@ export const Currencies: Record<string, {
     get gain() {
       if (!hasUpgrade("L\\0")) return 0;
 
-      return Effect.calculateEffects("leaves", 1)
+      let x = Effect.calculateEffects("leaves", 1)
+
+      x = Decimal.neg(Weathers.ctn[2].nerf[0](player.weather.best[2][1])).pow_base(2).mul(x)
+
+      return x
     },
 
     passive: 1,
@@ -38,6 +43,8 @@ export const Currencies: Record<string, {
       if (!hasUpgrade("L\\0")) return 0;
 
       let x = Effect.calculateEffects("age", 1)
+
+      x = Decimal.neg(Weathers.ctn[2].nerf[0](player.weather.best[2][1])).pow_base(2).mul(x)
 
       x = advanced_softcap(x, '4.351968e367', .5, Decimal.mul(hasUpgrade("E\\52") ? .75 : 1, hasUpgrade("FA\\1") ? .75 : 1), "E")
 
@@ -95,7 +102,9 @@ export const Currencies: Record<string, {
     get gain() {
       if (!Resets.entropy.reached) return 0;
 
-      const x = Effect.calculateEffects("entropy", 1)
+      let x = Effect.calculateEffects("entropy", 1)
+
+      x = softcap(x, 'e3000', 0.75, "E")
 
       return Decimal.max(x, 1).floor()
     },
@@ -125,7 +134,9 @@ export const Currencies: Record<string, {
     get gain() {
       if (!Resets.root.reached) return 0;
 
-      const x = Effect.calculateEffects("roots", 1)
+      let x = Effect.calculateEffects("roots", 1)
+
+      x = softcap(x, 1e33, 0.75, "E")
 
       return Decimal.max(x, 1).floor()
     },
@@ -208,6 +219,45 @@ export const Currencies: Record<string, {
 
     passive: 1,
   },
+  'flowers': {
+    name: "Flowers",
+    get amount() { return player.flower.amount },
+    set amount(v) { player.flower.amount = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!hasUpgrade("RO\\61")) return 0;
+
+      const x = Effect.calculateEffects("flowers", 1)
+
+      return Decimal.max(x, 0)
+    },
+
+    get passive() { return +isAutoEnabled('FC') * 10 },
+  },
+  'pollen': {
+    name: "Pollen",
+    get amount() { return player.flower.pollen },
+    set amount(v) { player.flower.pollen = Decimal.max(v, 0) },
+
+    get gain() {
+      if (!Resets.pollen.reached) return 0;
+
+      const x = Effect.calculateEffects("pollen", 1)
+
+      return Decimal.max(x, 1).round()
+    },
+
+    passive: 0,
+  },
+  'leaf-tier': {
+    name: "Leaf Tiers",
+    get amount() { return player.leaf_tier },
+    set amount(v) { player.leaf_tier = Decimal.max(v, 0) },
+
+    gain: 0,
+
+    passive: 0,
+  },
 }
 
 export function setupCurrencies() {
@@ -273,7 +323,7 @@ export function setupCurrencies() {
         softcap(
           Decimal.div(player.fallen[0], 1e25).add(1).root(10).mul(Decimal.add(player.leaves, 1).log10().div(2.5e3).pow(hasUpgrade("RO\\54") ? 2 : 1)),
         100, .5, "P"),
-      1e7, .5, "E"
+      1e7, 1, "LOG"
     ),
   })
   new Effect({
@@ -371,7 +421,7 @@ export const Currency_Stats: Record<string, {
     },
     hover: () => `<h3>Entropy</h3>
     <hr class='sub-line white-line' />
-    ${Effect.calculateEffectHTML("entropy",true,`(<b>Potential Energy</b> / ${format(2e22)})<sup>${format(1/20)}</sup>`, softcapped_text(Decimal.gte(TotalEffectGroups.entropy[EffectType.Base], 100)))} = <b>${format(temp.currencies.entropy)}</b>`,
+    ${Effect.calculateEffectHTML("entropy",true,`(<b>Potential Energy</b> / ${format(2e22)})<sup>${format(1/20)}</sup>`, softcapped_text(Decimal.gte(TotalEffectGroups.entropy[EffectType.Base], 100)))} = <b>${format(temp.currencies.entropy)}</b> ${softcapped_text(Decimal.gte(temp.currencies.entropy, 'e3000'))}`,
   },
   "cell": {
     name: "Cell",
@@ -407,7 +457,7 @@ export const Currency_Stats: Record<string, {
     },
     hover: () => `<h3>Roots</h3>
     <hr class='sub-line white-line' />
-    ${Effect.calculateEffectHTML("roots",true,`(log<sub>10</sub><b>Leaves</b> / ${format(1500)})<sup>${format(Effects['roots'].variables.exp,3)}</sup>`)} = <b>${format(temp.currencies.roots)}</b>`,
+    ${Effect.calculateEffectHTML("roots",true,`(log<sub>10</sub><b>Leaves</b> / ${format(1500)})<sup>${format(Effects['roots'].variables.exp,3)}</sup>`)} = <b>${format(temp.currencies.roots)}</b> ${softcapped_text(Decimal.gte(temp.currencies.roots, 1e30))}`,
   },
   "heat": {
     default: false,
